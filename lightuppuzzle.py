@@ -2,79 +2,78 @@ import sys
 
 
 # This function reads in the puzzle from the text file
-def readpuzzle():
-    txtfile = open('Puzzles.txt')
-    print(txtfile.readline())
-    dimension = txtfile.readline().split()
+def read_puzzle():
+    txt_file = open('Puzzles.txt')
+    print(txt_file.readline())
+    dimension = txt_file.readline().split()
     row = int(dimension[0])
 
     puzzle = [[0 for x in range(row)] for y in range(row)]
 
     for x in range(row):
         for y in range(row+1):
-            curr = txtfile.read(1)
+            curr = txt_file.read(1)
             if curr != '\n':
                 puzzle[x][y] = curr
 
     return puzzle
 
 
-#This fuction is meant to validate the state of a puzzle give
+# This function is meant to validate the state of a puzzle give
 # to see if it is valid
-def puzzlevalidation(puzzle):
+def puzzle_validation(puzzle):
     valid = True
     # print(puzzle)
 
     return valid
 
 
-def validbulbnexttowall(puzzle):
+def valid_bulb_next_to_wall(puzzle):
     for x in range(len(puzzle)):
         for y in range(len(puzzle)):
             if puzzle[x][y].isdigit():
-                numofbulbs = int(puzzle[x][y])
-                validNeighbour = generatevalidneighbours(x, y, len(puzzle))
-                seenbulbs= 0
-                for z in range(len(validNeighbour)):
-                    if puzzle[validNeighbour[z][0]][validNeighbour[z][1]] == "b":
-                        seenbulbs += 1
-                if numofbulbs != seenbulbs:
+                num_of_bulbs = int(puzzle[x][y])
+                valid_neighbour = generate_valid_neighbours(x, y, len(puzzle))
+                seen_bulbs= 0
+                for z in range(len(valid_neighbour)):
+                    if puzzle[valid_neighbour[z][0]][valid_neighbour[z][1]] == "b":
+                        seen_bulbs += 1
+                if num_of_bulbs != seen_bulbs:
                     return False
     return True
 
 
-def validrowsandcol(puzzle):
+def valid_rows_and_cols(puzzle):
     for x in range(len(puzzle)):
-        bulbseen = False
-        wallseen = False
+        bulb_seen = False
+        wall_seen = False
         for y in range(len(puzzle)):
-            if bulbseen and puzzle[y][x] == "b":
+            if bulb_seen and puzzle[y][x] == "b":
                 return False
-            elif wallseen and puzzle[y][x] == "b":
-                wallseen = False
+            elif wall_seen and puzzle[y][x] == "b":
+                wall_seen = False
             elif puzzle[y][x] == "b":
-                bulbseen = True
+                bulb_seen = True
             elif puzzle[y][x].isdigit():
-                wallseen = True
+                wall_seen = True
 
             # write column code
 
     return True
 
 
+def generate_valid_neighbours(row, col, length):
 
-def generatevalidneighbours(row,col,length):
-
-    validneighbours = []
+    valid_neighbours = []
     if row > 0:
-        validneighbours.append([row - 1, col])
+        valid_neighbours.append([row - 1, col])
     if row < length-1:
-        validneighbours.append([row + 1, col])
+        valid_neighbours.append([row + 1, col])
     if col > 0:
-        validneighbours.append([row, col - 1])
+        valid_neighbours.append([row, col - 1])
     if col < length-1:
-        validneighbours.append([row, col + 1])
+        valid_neighbours.append([row, col + 1])
 
-    return validneighbours
+    return valid_neighbours
 
 # print(puzzlevalidation(readpuzzle()))
