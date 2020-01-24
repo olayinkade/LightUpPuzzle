@@ -49,8 +49,106 @@ def prioritize_bulbs(puzzle: List[List[str]], r: int, c: int):
         moving_c += 1
 
 
+def prioritize_walls(puzzle, r, c):
+    moving_r = r - 1
+    if r > 0 and isinstance(puzzle[moving_r][c], int):
+        puzzle[moving_r][c] = int(puzzle[moving_r][c]/2)*2
+        if puzzle[moving_r][c] == 2:
+            prioritize_bulbs(puzzle, moving_r, c)
 
-def forward_checking(puzzle: List[List[str]], domain, non_assigned_cells, heuristic):
+    moving_r = r + 1
+    if r < len(puzzle)-1 and isinstance(puzzle[moving_r][c], int):
+        puzzle[moving_r][c] = int(puzzle[moving_r][c]/2) * 2
+        if puzzle[moving_r][c] == 2:
+            prioritize_bulbs(puzzle, moving_r, c)
+
+    moving_c = c - 1
+    if c > 0 and isinstance(puzzle[r][moving_c], int):
+        puzzle[r][moving_c] = int(puzzle[r][moving_c]/2) * 2
+        if puzzle[r][moving_c] == 2:
+            prioritize_bulbs(puzzle, r, moving_c)
+
+    moving_c = c + 1
+    if c < len(puzzle[0])-1 and isinstance(puzzle[r][moving_c], int):
+        puzzle[r][moving_c] = int(puzzle[r][moving_c]/2) * 2
+        if puzzle[r][moving_c] == 2:
+            prioritize_bulbs(puzzle, r, moving_c)
+
+
+def generate_potential_bulbs_to_wall(puzzle: List[List[int]], r: int, c: int) -> int:
+    num_bulbs = 0
+    if r > 0 and isinstance(puzzle[r-1][c], int) and puzzle[r-1][c] >= 2:
+        num_bulbs += 1
+    if r < len(puzzle)-1 and isinstance(puzzle[r+1][c], int) and puzzle[r+1][c] >= 2:
+        num_bulbs += 1
+    if c > 0 and isinstance(puzzle[r][c-1], int) and puzzle[r][c-1] >= 2:
+        num_bulbs += 1
+    if c < len(puzzle[0])-1 and isinstance(puzzle[r][j+1], int) and puzzle[r][c+1] >= 2:
+        num_bulbs += 1
+    return num_bulbs
+
+
+def check_curr_state(puzzle, non_assigned_cells) -> bool:
+    # if a cell can be a bulb or empty, mark it as 3
+    for r in range(len(puzzle)):
+        for c in range(len(puzzle[r])):
+            value = len(puzzle)*r + c
+            if value in non_assigned_cells:
+                puzzle[r][c] = 3
+
+    # if a cell cannot be a bulb, mark it as 1.
+    for r in range(len(puzzle)):
+        for c in range(len(puzzle[r])):
+            if puzzle[r][c] == 'b':
+                prioritize_bulbs(puzzle, r, c)
+
+    # if a cell cannot be empty but can be a bulb, mark it as 2, mark it as 0 if it can't be neither
+    for r in range(len(puzzle)):
+        for c in range(len(puzzle[r])):
+            if puzzle[r][c] in wall_values:
+                num_adj_bulbs = count_adjacent_bulbs(puzzle, r, c)
+                potential_bulbs = generate_potential_bulbs_to_wall(puzzle, r, c)
+
+                cell_status = check_edge_corner(puzzle, r, c)
+
+                require_bulbs = int(puzzle[r][c]) - num_adj_bulbs - cell_status
+                if require_bulbs == potential_bulbs:
+                    prioritize_walls(puzzle, r, c)
+
+    result = True
+    for r in range(len(puzzle)):
+        for c in range(len(puzzle[r])):
+            if isinstance(puzzle[r][c], int):
+                if puzzle[r][c] == 0:
+                    result = False
+                puzzle[r][c] = '_'
+    return result
+
+
+def is_inside(puzzle: List[List[int]], r: int, c: int) -> bool:
+    return 0 <= r < len(puzzle) and 0 <= c < len(puzzle[0])
+
+
+def can_bulb_be_here(puzzle: List[List[str]], r: int, c: int) -> bool:
+    delta_r = [-1, 1, 0, 0]
+    delta_c = [0, 0, -1, 1]
+    for i in range(len(delta_c)):
+        moving_r = r + delta_r[i]
+        moving_c = c + delta_c[i]
+
+        if is_inside(puzzle, moving_r, moving_c) and puzzle[moving_r][moving_c] in wall_values:
+            if count_adjacent_bulbs(puzzle, moving_r, moving_c) > int(puzzle[moving_r][moving_c]):
+                return False
+
+        while is_inside(puzzle, moving_r, moving_c) and not puzzle[moving_r][moving_c] in wall_values:
+            if puzzle[moving_r][moving_c] == 'b':  # adjacent bulbs
+                return False
+            moving_r += delta_r[i]
+            moving_c += delta_c[i]
+    return True
+
+
+def forward_checking(puzzle: List[List[str]], domain, non_assigned_cells, heuristic='most_constrained'):
     num_nodes = 0
     result = ""
     if num_nodes % 10000 == 0:
@@ -59,7 +157,21 @@ def forward_checking(puzzle: List[List[str]], domain, non_assigned_cells, heuris
         result = 'Too many nodes. Timeout'
     if is_puzzle_solved(puzzle):
         return puzzle
-    # if len(non_assigned_cells) == 0 and
+    if len(non_assigned_cells) == 0 and check_curr_state(puzzle, non_assigned_cells):
+        return 'back'
+    most_constrained = find_most_constrained(puzzle, non_assigned_cells)
+    non_assigned_cells.remove(most_constrained)
+
+    r, c = most_constrained[0], most_constrained[1]
+    for val in domain:
+        puzzle[r][c] = val
+        if (val != '_' and can_bulb_be_here(puzzle, r, c)) or val == '_':
+            result = forward_checking(puzzle, domain, non_assigned_cells, heuristic='most_constrained')
+            if result != 'back':
+                return result
+
+    non_assigned_cells.append(most_constrained)
+    return 'back'
 
 
 def count_adjacent_bulbs(puzzle: List[List[str]], r: int, c: int) -> int:
@@ -169,3 +281,21 @@ def find_most_constrained(puzzle: List[List[str]], non_assigned: List[List[int]]
 
     is_map_lit_up_and_clean_map(puzzle)
     return curr_most_constrained[1]
+
+
+def get_empty_cells(puzzle: List[List[int]]) -> List[List[int]]:
+    empty_cells = []
+    for r in range(len(puzzle)):
+        for c in range(len(puzzle[r])):
+            if puzzle[r][c] == '_':
+                empty_cells.append([r, c])
+    return empty_cells
+
+
+def solve(puzzle: List[List[str]]):
+    domain = ('b', '_')
+    non_assigned = get_empty_cells(puzzle)
+    return forward_checking(puzzle, domain, non_assigned)
+
+
+# TODO: get input and actually try to solve the puzzle
