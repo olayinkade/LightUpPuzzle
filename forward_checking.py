@@ -1,7 +1,7 @@
 from typing import List
 import random
 
-wall_values = ['0', '1', '2', '3', '4']
+wall_values = {'0', '1', '2', '3', '4'}
 
 
 def check_edge_corner(puzzle: List[List[str]], r: int, c: int) -> int:
@@ -27,13 +27,65 @@ def get_total_potential_adjacent(puzzle: List[List[str]], r: int, c: int) -> int
     return count
 
 
-def forward_checking(puzzle: List[List[int]], domain, non_assigned_cells, heuristic) -> str:
+def prioritize_bulbs(puzzle: List[List[str]], r: int, c: int):
+    moving_r = r - 1
+    while moving_r >= 0 and isinstance(puzzle[moving_r][c], int):
+        puzzle[moving_r][c] = puzzle[moving_r][c] % 2
+        moving_r -= 1
+
+    moving_r = r + 1
+    while moving_r < len(puzzle)-1 and isinstance(puzzle[moving_r][c], int):
+        puzzle[moving_r][c] = puzzle[moving_r][c] % 2
+        moving_r += 1
+
+    moving_c = c - 1
+    while moving_c >= 0 and isinstance(puzzle[r][moving_c], int):
+        puzzle[r][moving_c] = puzzle[r][moving_c] % 2
+        moving_c -= 1
+
+    moving_c = c + 1
+    while moving_c < len(puzzle[r])-1 and isinstance(puzzle[r][moving_c], int):
+        puzzle[r][moving_c] = puzzle[r][moving_c] % 2
+        moving_c += 1
+
+
+
+def forward_checking(puzzle: List[List[str]], domain, non_assigned_cells, heuristic):
     num_nodes = 0
     result = ""
     if num_nodes % 10000 == 0:
         print(num_nodes)
     if num_nodes == 5000000:
         result = 'Too many nodes. Timeout'
+    if is_puzzle_solved(puzzle):
+        return puzzle
+    # if len(non_assigned_cells) == 0 and
+
+
+def count_adjacent_bulbs(puzzle: List[List[str]], r: int, c: int) -> int:
+    num_bulbs = 0
+    if r > 0 and puzzle[r-1][c] == 'b':
+        num_bulbs += 1
+    if r < len(puzzle)-1 and puzzle[r+1][c] == 'b':
+        num_bulbs += 1
+    if c > 0 and puzzle[r][c-1] == 'b':
+        num_bulbs += 1
+    if c < len(puzzle[0])-1 and puzzle[r][c+1] == 'b':
+        num_bulbs += 1
+    return num_bulbs
+
+
+# check if the current solution is valid
+def is_puzzle_solved(puzzle: List[List[str]]) -> bool:
+    for r in range(len(puzzle)):
+        for c in range(len(puzzle[r])):
+            if puzzle[r][c] in wall_values and int(puzzle[r][c]) != count_adjacent_bulbs(puzzle, r, c):
+                return False
+
+    light_map_up(puzzle)
+
+    # TODO: probably should print the solution here
+    return is_map_lit_up_and_clean_map(puzzle)
 
 
 def light_map_up(puzzle: List[List[str]]):
