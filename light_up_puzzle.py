@@ -1,19 +1,21 @@
 stack = []
 variables = []
+invalid_wall = []
+valid_wall = []
 
-def priortize_variables(puzzle):
+
+def prioritize_variables(puzzle):
     invalid_neighbours = []
-    for x in range(len(puzzle)):
-        for y in range(len(puzzle)):
-            if puzzle[x][y].isdigit():
-                valid_neighbours = generate_valid_neighbours(x, y, len(puzzle), puzzle)
-                for z in range(len(valid_neighbours)):
-                    for a in range(len(variables)):
-                        if variables[a][1] == valid_neighbours[z]:
-                            variables[a][0] += 1
-                            break
-            if puzzle[x][y] == '0':
-                invalid_neighbours.extend(generate_valid_neighbours(x, y, len(puzzle), puzzle))
+    for x in range(len(valid_wall)):
+        valid_neighbours = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
+        for z in range(len(valid_neighbours)):
+            for a in range(len(variables)):
+                if variables[a][1] == valid_neighbours[z]:
+                    variables[a][0] += 1
+                    break
+    for x in range(len(invalid_wall)):
+        invalid_neighbours.extend(generate_valid_neighbours(invalid_wall[x][0],
+                                                            invalid_wall[x][1], len(puzzle), puzzle))
 
     for x in range(len(invalid_neighbours)):
         for y in range(len(variables)):
@@ -30,48 +32,80 @@ def backtrack():
     while True or stack != []:
         curr = stack.pop()
         if curr[0][0] != -1:
-            puzzle = place_bulbs(curr[3], curr[0])
-            is_valid_placement = valid_rows_and_cols(curr[0][1][0], curr[0][1][1], puzzle)
-            reset(curr[3], curr[0])
-            if is_valid_placement == False:
-                continue
+            puzzle = place_bulbs(curr[3], curr[0][1], "b", "_", "*")
+            is_valid_row_col = valid_rows_and_cols(curr[0][1][0], curr[0][1][1], puzzle)
 
-            curr[3].append(curr[0][1])
-            #does validate the two constraints
+            if not is_valid_row_col:
+                place_bulbs(curr[3], curr[0][1], "_", "*", "_")
+                continue
+            is_valid_bulb_around_Wall = validate_bulbs_next_to_wall(puzzle)
+            if not is_valid_bulb_around_Wall:
+                place_bulbs(curr[3], curr[0][1], "_", "*", "_")
+                continue
+            lit_up = True
+            for x in range(len(puzzle)):
+                if "_" not in puzzle[x]:
+                    continue
+                else:
+                    lit_up = False
+                    break
+            if lit_up:
+                if valid_bulbs_next_to_wall(puzzle):
+                    break
+            place_bulbs(curr[3], curr[0][1], "_", "*", "_")
+            bulb_placed = list(curr[3])
+            bulb_placed.append(curr[0][1])
+            curr[1].remove(curr[0])
+
         for x in range(len(curr[1])):
             child_position = curr[1][x]
             child_possible_values = list(curr[1])
-            child_possible_values.remove(child_position)
-            bulb_placed = []
-            if curr[0][0] != -1:
-                bulb_placed = curr[3]
+
+            if curr[0][0] == -1:
+                bulb_placed = []
             stack.append((child_position,  child_possible_values, curr[2]+1, bulb_placed))
 
 
-def place_bulbs(existing_bulb, curr):
-    puzzle = main_puzzle.copy()
+def place_bulbs(existing_bulb, curr, placeholder, new, old):
+    puzzle = main_puzzle
     for x in range(len(existing_bulb)):
-        puzzle[existing_bulb[x][0]][existing_bulb[x][1]] = 'b'
+        puzzle[existing_bulb[x][0]][existing_bulb[x][1]] = placeholder
 
-    puzzle[curr[1][0]][curr[1][1]] = "b"
+    puzzle[curr[0]][curr[1]] = placeholder
+
+    bulbs = list(existing_bulb)
+    bulbs.append(curr)
+
+    for x in range(len(bulbs)):
+        wall_seen_u = False
+        wall_seen_d = False
+        wall_seen_l = False
+        wall_seen_r = False
+
+        for y in range(1, len(puzzle)-1):
+            if bulbs[x][0] + y <= len(puzzle) - 1 and puzzle[bulbs[x][0] + y][bulbs[x][1]] == new and not wall_seen_d:
+                puzzle[bulbs[x][0] + y][bulbs[x][1]] = old
+            elif bulbs[x][0] + y <= len(puzzle) - 1 and (puzzle[bulbs[x][0] + y][bulbs[x][1]].isdigit() or puzzle[bulbs[x][0] + y][bulbs[x][1]] == placeholder):
+                wall_seen_d = True
+            if bulbs[x][0] - y >= 0 and puzzle[bulbs[x][0] - y][bulbs[x][1]] == new and not wall_seen_u:
+                puzzle[bulbs[x][0] - y][bulbs[x][1]] = old
+            elif bulbs[x][0] - y >= 0 and (puzzle[bulbs[x][0] - y][bulbs[x][1]].isdigit() or puzzle[bulbs[x][0] - y][bulbs[x][1]] == placeholder):
+                wall_seen_u = True
+            if bulbs[x][1] + y <= len(puzzle) - 1 and puzzle[bulbs[x][0]][bulbs[x][1] + y] == new and not wall_seen_r:
+                puzzle[bulbs[x][0]][bulbs[x][1] + y] = old
+            elif bulbs[x][1] + y <= len(puzzle) - 1 and (puzzle[bulbs[x][0]][bulbs[x][1] + y].isdigit() or puzzle[bulbs[x][0]][bulbs[x][1] + y] == placeholder):
+                wall_seen_r = True
+            if bulbs[x][1] - y >= 0 and puzzle[bulbs[x][0]][bulbs[x][1] - y] == new and not wall_seen_l:
+                puzzle[bulbs[x][0]][bulbs[x][1] - y] = old
+            elif bulbs[x][1] - y >= 0 and (puzzle[bulbs[x][0]][bulbs[x][1] - y].isdigit() or puzzle[bulbs[x][0]][bulbs[x][1] - y] == placeholder):
+                wall_seen_l = True
     return puzzle
-
-
-def reset(existing_bulb, curr):
-    puzzle = main_puzzle.copy()
-    for x in range(len(existing_bulb)):
-        puzzle[existing_bulb[x][0]][existing_bulb[x][1]] = '_'
-
-    puzzle[curr[1][0]][curr[1][1]] = "_"
-    return puzzle
-
-
 
 
 # This function reads in the puzzle from the text file
 def read_puzzle():
     txt_file = open('Puzzles.txt')
-    print(txt_file.readline())
+    txt_file.readline()
     dimension = txt_file.readline().split()
     row = int(dimension[0])
 
@@ -84,33 +118,38 @@ def read_puzzle():
                 puzzle[x][y] = curr
             if curr == "_":
                 variables.append([0, [x, y]])
-
-    print(variables)
+            if curr.isdigit():
+                if curr == "0":
+                    invalid_wall.append([x, y])
+                else:
+                    valid_wall.append([x, y])
 
     return puzzle
 
 
-# This function is meant to validate the state of a puzzle give
-# to see if it is valid
-def puzzle_validation(puzzle):
-    valid = True
-    # print(puzzle)
+def validate_bulbs_next_to_wall(puzzle):
+    for x in range(len(valid_wall)):
+        num_of_bulbs = int(puzzle[valid_wall[x][0]][valid_wall[x][1]])
+        valid_neighbour = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
+        seen_bulbs = 0
+        for z in range(len(valid_neighbour)):
+            if puzzle[valid_neighbour[z][0]][valid_neighbour[z][1]] == "b":
+                seen_bulbs += 1
+        if num_of_bulbs < seen_bulbs:
+            return False
+    return True
 
-    return valid
 
-
-def valid_bulb_next_to_wall(puzzle):
-    for x in range(len(puzzle)):
-        for y in range(len(puzzle)):
-            if puzzle[x][y].isdigit():
-                num_of_bulbs = int(puzzle[x][y])
-                valid_neighbour = generate_valid_neighbours(x, y, len(puzzle))
-                seen_bulbs= 0
-                for z in range(len(valid_neighbour)):
-                    if puzzle[valid_neighbour[z][0]][valid_neighbour[z][1]] == "b":
-                        seen_bulbs += 1
-                if num_of_bulbs != seen_bulbs:
-                    return False
+def valid_bulbs_next_to_wall(puzzle):
+    for x in range(len(valid_wall)):
+        num_of_bulbs = int(puzzle[valid_wall[x][0]][valid_wall[x][1]])
+        valid_neighbour = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
+        seen_bulbs = 0
+        for z in range(len(valid_neighbour)):
+            if puzzle[valid_neighbour[z][0]][valid_neighbour[z][1]] == "b":
+                seen_bulbs += 1
+        if num_of_bulbs != seen_bulbs:
+            return False
     return True
 
 
@@ -150,23 +189,21 @@ def generate_valid_neighbours(row, col, length, puzzle):
     valid_neighbours = []
 
     if row > 0:
-        if puzzle[row - 1][col] == "_":
+        if not puzzle[row - 1][col].isdigit():
             valid_neighbours.append([row - 1, col])
     if row < length-1:
-        if puzzle[row + 1][col] == "_":
+        if not puzzle[row + 1][col].isdigit():
             valid_neighbours.append([row + 1, col])
     if col > 0:
-        if puzzle[row][col-1] == "_":
+        if not puzzle[row][col-1].isdigit():
             valid_neighbours.append([row, col - 1])
     if col < length-1:
-        if puzzle[row][col+1] == "_":
+        if not puzzle[row][col+1].isdigit():
             valid_neighbours.append([row, col + 1])
 
     return valid_neighbours
 
-# priortize_variables(read_puzzle())
-# backtrack()
+
 main_puzzle = read_puzzle()
-print(main_puzzle)
-priortize_variables(main_puzzle)
+prioritize_variables(main_puzzle)
 backtrack()
