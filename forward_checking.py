@@ -1,8 +1,10 @@
 from typing import List
 import random
 import light_up_puzzle
+import time
 
 wall_values = {'0', '1', '2', '3', '4'}
+num_nodes = 0
 
 
 def check_edge_corner(puzzle: List[List[str]], r: int, c: int) -> int:
@@ -84,7 +86,7 @@ def generate_potential_bulbs_to_wall(puzzle: List[List[int]], r: int, c: int) ->
         num_bulbs += 1
     if c > 0 and isinstance(puzzle[r][c-1], int) and puzzle[r][c-1] >= 2:
         num_bulbs += 1
-    if c < len(puzzle[0])-1 and isinstance(puzzle[r][j+1], int) and puzzle[r][c+1] >= 2:
+    if c < len(puzzle[0])-1 and isinstance(puzzle[r][c+1], int) and puzzle[r][c+1] >= 2:
         num_bulbs += 1
     return num_bulbs
 
@@ -150,12 +152,12 @@ def can_bulb_be_here(puzzle: List[List[str]], r: int, c: int) -> bool:
 
 
 def forward_checking(puzzle: List[List[str]], domain, non_assigned_cells, heuristic='most_constrained'):
-    num_nodes = 0
-    result = ""
+    global num_nodes
+    num_nodes += 1
     if num_nodes % 10000 == 0:
         print(num_nodes)
     if num_nodes == 5000000:
-        result = 'Too many nodes. Timeout'
+        return 'Too many nodes. Timeout'
     if is_puzzle_solved(puzzle):
         return puzzle
     if len(non_assigned_cells) == 0 and check_curr_state(puzzle, non_assigned_cells):
@@ -309,6 +311,12 @@ def print_puzzle(puzzle: List[List[str]]):
 # TODO: add different input reading methods and heuristic detection
 puzzle = light_up_puzzle.read_puzzle()
 # print(type(puzzle))
+starting_time = time.time()
 solution = solve(puzzle)
-print_puzzle(solution)
-
+ending_time = time.time()
+if solution == 'Too many nodes. Timeout':
+    print('Too many nodes. Timeout.\nIt took {} seconds.'.format(ending_time - starting_time))
+else:
+    print_puzzle(solution)
+    print("The puzzle was solved in {} seconds.".format(ending_time - starting_time))
+print('Visited {} nodes.'.format(num_nodes))
