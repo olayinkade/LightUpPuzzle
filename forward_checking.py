@@ -1,5 +1,6 @@
 from typing import List
 import random
+import light_up_puzzle
 
 wall_values = {'0', '1', '2', '3', '4'}
 
@@ -283,7 +284,7 @@ def find_most_constrained(puzzle: List[List[str]], non_assigned: List[List[int]]
     return curr_most_constrained[1]
 
 
-def get_empty_cells(puzzle: List[List[int]]) -> List[List[int]]:
+def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
     empty_cells = []
     for r in range(len(puzzle)):
         for c in range(len(puzzle[r])):
@@ -298,4 +299,16 @@ def solve(puzzle: List[List[str]]):
     return forward_checking(puzzle, domain, non_assigned)
 
 
-# TODO: get input and actually try to solve the puzzle
+def print_puzzle(puzzle: List[List[str]]):
+    for r in range(len(puzzle)):
+        for c in range(len(puzzle[0])):
+            print(puzzle[r][c], end=' ')
+        print()
+
+
+# TODO: add different input reading methods and heuristic detection
+puzzle = light_up_puzzle.read_puzzle()
+# print(type(puzzle))
+solution = solve(puzzle)
+print_puzzle(solution)
+
