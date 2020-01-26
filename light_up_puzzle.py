@@ -24,7 +24,6 @@ def prioritize_variables(puzzle):
                 break
 
     variables.sort()
-    print(variables)
 
 
 def backtrack():
@@ -60,7 +59,6 @@ def backtrack():
         for x in range(len(curr[1])):
             child_position = curr[1][x]
             child_possible_values = list(curr[1])
-
             if curr[0][0] == -1:
                 bulb_placed = []
             stack.append((child_position,  child_possible_values, curr[2]+1, bulb_placed))
@@ -82,23 +80,26 @@ def place_bulbs(existing_bulb, curr, placeholder, new, old):
         wall_seen_l = False
         wall_seen_r = False
 
-        for y in range(1, len(puzzle)-1):
+        for y in range(1, len(puzzle)):
             if bulbs[x][0] + y <= len(puzzle) - 1 and puzzle[bulbs[x][0] + y][bulbs[x][1]] == new and not wall_seen_d:
                 puzzle[bulbs[x][0] + y][bulbs[x][1]] = old
-            elif bulbs[x][0] + y <= len(puzzle) - 1 and (puzzle[bulbs[x][0] + y][bulbs[x][1]].isdigit() or puzzle[bulbs[x][0] + y][bulbs[x][1]] == placeholder):
+            elif bulbs[x][0] + y <= len(puzzle) - 1 and (puzzle[bulbs[x][0] + y][bulbs[x][1]].isdigit()):
                 wall_seen_d = True
             if bulbs[x][0] - y >= 0 and puzzle[bulbs[x][0] - y][bulbs[x][1]] == new and not wall_seen_u:
                 puzzle[bulbs[x][0] - y][bulbs[x][1]] = old
-            elif bulbs[x][0] - y >= 0 and (puzzle[bulbs[x][0] - y][bulbs[x][1]].isdigit() or puzzle[bulbs[x][0] - y][bulbs[x][1]] == placeholder):
+            elif bulbs[x][0] - y >= 0 and (puzzle[bulbs[x][0] - y][bulbs[x][1]].isdigit()):
                 wall_seen_u = True
             if bulbs[x][1] + y <= len(puzzle) - 1 and puzzle[bulbs[x][0]][bulbs[x][1] + y] == new and not wall_seen_r:
                 puzzle[bulbs[x][0]][bulbs[x][1] + y] = old
-            elif bulbs[x][1] + y <= len(puzzle) - 1 and (puzzle[bulbs[x][0]][bulbs[x][1] + y].isdigit() or puzzle[bulbs[x][0]][bulbs[x][1] + y] == placeholder):
+            elif bulbs[x][1] + y <= len(puzzle) - 1 and (puzzle[bulbs[x][0]][bulbs[x][1] + y].isdigit()):
                 wall_seen_r = True
             if bulbs[x][1] - y >= 0 and puzzle[bulbs[x][0]][bulbs[x][1] - y] == new and not wall_seen_l:
                 puzzle[bulbs[x][0]][bulbs[x][1] - y] = old
-            elif bulbs[x][1] - y >= 0 and (puzzle[bulbs[x][0]][bulbs[x][1] - y].isdigit() or puzzle[bulbs[x][0]][bulbs[x][1] - y] == placeholder):
+            elif bulbs[x][1] - y >= 0 and (puzzle[bulbs[x][0]][bulbs[x][1] - y].isdigit()):
                 wall_seen_l = True
+
+            if wall_seen_l and wall_seen_d and wall_seen_r and wall_seen_u:
+                break
     return puzzle
 
 
