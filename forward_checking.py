@@ -16,7 +16,7 @@ def check_edge_corner(puzzle: List[List[str]], r: int, c: int) -> int:
     return status
 
 
-def get_total_potential_adjacent(puzzle: List[List[str]], r: int, c: int) -> int:
+def get_total_potential_adjacent(puzzle, r: int, c: int) -> int:
     rows, cols, count = len(puzzle), len(puzzle[0]), 0
 
     if r > 0 and isinstance(puzzle[r-1][c], int) and puzzle[r-1][c] >= 2:
@@ -30,7 +30,7 @@ def get_total_potential_adjacent(puzzle: List[List[str]], r: int, c: int) -> int
     return count
 
 
-def prioritize_bulbs(puzzle: List[List[str]], r: int, c: int):
+def prioritize_bulbs(puzzle, r: int, c: int):
     moving_r = r - 1
     while moving_r >= 0 and isinstance(puzzle[moving_r][c], int):
         puzzle[moving_r][c] = puzzle[moving_r][c] % 2
@@ -78,7 +78,7 @@ def prioritize_walls(puzzle, r, c):
             prioritize_bulbs(puzzle, r, moving_c)
 
 
-def generate_potential_bulbs_to_wall(puzzle: List[List[int]], r: int, c: int) -> int:
+def generate_potential_bulbs_to_wall(puzzle, r: int, c: int) -> int:
     num_bulbs = 0
     if r > 0 and isinstance(puzzle[r-1][c], int) and puzzle[r-1][c] >= 2:
         num_bulbs += 1
