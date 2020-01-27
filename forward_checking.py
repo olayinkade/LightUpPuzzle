@@ -128,7 +128,7 @@ def check_curr_state(puzzle, non_assigned_cells) -> bool:
     return result
 
 
-def is_inside(puzzle: List[List[int]], r: int, c: int) -> bool:
+def is_inside(puzzle: List[List[str]], r: int, c: int) -> bool:
     return 0 <= r < len(puzzle) and 0 <= c < len(puzzle[0])
 
 
