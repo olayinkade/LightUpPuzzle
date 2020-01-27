@@ -225,6 +225,35 @@ def light_map_up(puzzle: List[List[str]]):
                     k += 1
 
 
+# given a bulb position, count the number of cells should be lit up in the corresponding row and column
+def num_cells_should_be_lit(puzzle: List[List[str]], r: int, c: int) -> int:
+    num_cells = 0
+    row_up = r - 1
+    while row_up >= 0 and (puzzle[row_up][c] == '_' or puzzle[row_up][c] == '*'):
+        if puzzle[row_up][c] == '_':
+            num_cells += 1
+        row_up -= 1
+
+    row_down = r + 1
+    while row_down < len(puzzle) and (puzzle[row_down][c] == '_' or puzzle[row_down][c] == '*'):
+        if puzzle[row_down][c] == '_':
+            num_cells += 1
+        row_down += 1
+
+    col_left = c - 1
+    while col_left >= 0 and (puzzle[r][col_left] == '_' or puzzle[r][col_left] == '*'):
+        if puzzle[r][col_left] == '_':
+            num_cells += 1
+        col_left -= 1
+
+    col_right = c + 1
+    while col_right < len(puzzle[0]) and (puzzle[r][col_right] == '_' or puzzle[r][col_right] == '*'):
+        if puzzle[r][col_right] == '_':
+            num_cells += 1
+        col_right += 1
+    return num_cells
+
+
 def count_walls_around(puzzle: List[List[str]], r: int, c: int) -> int:
     num_walls = 0
     if r > 0 and puzzle[r-1][c] in wall_values:
@@ -262,11 +291,11 @@ def is_map_lit_up_and_clean_map(puzzle: List[List[str]]) -> bool:
     return lit_up
 
 
-def find_most_constrained(puzzle: List[List[str]], non_assigned: List[List[int]]) -> int:
+def find_most_constrained(puzzle: List[List[str]], empty_cells: List[List[int]]) -> int:
     curr_most_constrained = (-1, -1)
     light_map_up(puzzle)
 
-    for cell in non_assigned:
+    for cell in empty_cells:
         r = cell[0]
         c = cell[1]
 
@@ -284,6 +313,25 @@ def find_most_constrained(puzzle: List[List[str]], non_assigned: List[List[int]]
 
     is_map_lit_up_and_clean_map(puzzle)
     return curr_most_constrained[1]
+
+
+def find_most_constraining(puzzle: List[List[str]], empty_cells: List[List[int]]):
+    cells = []
+    max_count = 0
+
+    light_map_up(puzzle)
+
+    for cell in empty_cells:
+        r = cell[0]
+        c = cell[1]
+        to_be_lit_up = num_cells_should_be_lit(puzzle, r, c)
+        if to_be_lit_up > max_count:
+            cells = [cell]
+            max_count = to_be_lit_up
+        elif to_be_lit_up == max_count:
+            cells.append(cell)
+    is_map_lit_up_and_clean_map(puzzle)
+    return cells[random.randint(0, len(cells)-1)]
 
 
 def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
