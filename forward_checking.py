@@ -151,7 +151,7 @@ def can_bulb_be_here(puzzle: List[List[str]], r: int, c: int) -> bool:
     return True
 
 
-def forward_checking(puzzle: List[List[str]], domain, non_assigned_cells, heuristic='most_constrained'):
+def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic='most_constrained'):
     global num_nodes
     num_nodes += 1
     if num_nodes % 10000 == 0:
@@ -160,20 +160,21 @@ def forward_checking(puzzle: List[List[str]], domain, non_assigned_cells, heuris
         return 'Too many nodes. Timeout'
     if is_puzzle_solved(puzzle):
         return puzzle
-    if len(non_assigned_cells) == 0 and check_curr_state(puzzle, non_assigned_cells):
+    if len(empty_cells) == 0 and check_curr_state(puzzle, empty_cells):
         return 'back'
-    most_constrained = find_most_constrained(puzzle, non_assigned_cells)
-    non_assigned_cells.remove(most_constrained)
+    # chosen_cell = find_most_constrained(puzzle, empty_cells)
+    chosen_cell = find_most_constraining(puzzle, empty_cells)
+    empty_cells.remove(chosen_cell)
 
-    r, c = most_constrained[0], most_constrained[1]
+    r, c = chosen_cell[0], chosen_cell[1]
     for val in domain:
         puzzle[r][c] = val
         if (val != '_' and can_bulb_be_here(puzzle, r, c)) or val == '_':
-            result = forward_checking(puzzle, domain, non_assigned_cells, heuristic='most_constrained')
+            result = forward_checking(puzzle, domain, empty_cells, heuristic='most_constrained')
             if result != 'back':
                 return result
 
-    non_assigned_cells.append(most_constrained)
+    empty_cells.append(chosen_cell)
     return 'back'
 
 
@@ -291,7 +292,7 @@ def is_map_lit_up_and_clean_map(puzzle: List[List[str]]) -> bool:
     return lit_up
 
 
-def find_most_constrained(puzzle: List[List[str]], empty_cells: List[List[int]]) -> int:
+def find_most_constrained(puzzle: List[List[str]], empty_cells: List[List[int]]):
     curr_most_constrained = (-1, -1)
     light_map_up(puzzle)
 
