@@ -1,3 +1,4 @@
+import random
 stack = []
 variables = []
 invalid_wall = []
@@ -23,13 +24,25 @@ def prioritize_variables(puzzle):
                 variables.remove(variables[y])
                 break
 
+    for x in range(len(valid_wall)):
+        value = puzzle[valid_wall[x][0]][valid_wall[x][1]]
+        sure_variable = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
+        if int(value) == len(sure_variable):
+            for y in range(len(sure_variable)):
+                for z in range(len(variables)):
+                    if variables[z][1] == sure_variable[y]:
+                        variables[z][0] = 6
+
     variables.sort()
 
 
 def backtrack():
     stack.append(([-1, -1], variables, 0, []))
-    while True or stack != []:
+    global num_nodes
+    num_nodes = 1
+    while stack != []:
         curr = stack.pop()
+        num_nodes += 1
         if curr[0][0] != -1:
             puzzle = place_bulbs(curr[3], curr[0][1], "b", "_", "*")
             is_valid_row_col = valid_rows_and_cols(curr[0][1][0], curr[0][1][1], puzzle)
@@ -37,8 +50,8 @@ def backtrack():
             if not is_valid_row_col:
                 place_bulbs(curr[3], curr[0][1], "_", "*", "_")
                 continue
-            is_valid_bulb_around_Wall = validate_bulbs_next_to_wall(puzzle)
-            if not is_valid_bulb_around_Wall:
+            is_valid_bulb_around_wall = validate_bulbs_next_to_wall(puzzle)
+            if not is_valid_bulb_around_wall:
                 place_bulbs(curr[3], curr[0][1], "_", "*", "_")
                 continue
             lit_up = True
@@ -62,6 +75,9 @@ def backtrack():
             if curr[0][0] == -1:
                 bulb_placed = []
             stack.append((child_position,  child_possible_values, curr[2]+1, bulb_placed))
+
+
+    return puzzle
 
 
 def place_bulbs(existing_bulb, curr, placeholder, new, old):
@@ -204,7 +220,46 @@ def generate_valid_neighbours(row, col, length, puzzle):
 
     return valid_neighbours
 
+def count_adjacent_lit_cells(puzzle, r, c) -> int:
+    count = 0
+    if r > 0 and puzzle[r-1][c] == '*':
+        count += 1
+    if r < len(puzzle)-1 and puzzle[r+1][c] == '*':
+        count += 1
+    if c > 0 and puzzle[r][c-1] == '*':
+        count += 1
+    if c < len(puzzle[0])-1 and puzzle[r][c+1] == '*':
+        count += 1
+    return count
+
+
+def print_puzzle(puzzle):
+    for x in range(len(puzzle)):
+        for y in range(len(puzzle)):
+            print(puzzle[x][y], end=' ')
+        print()
+
+
+def find_most_constraint(puzzle, child_possible_variables):
+    curr_most_constrained = (-1, -1)
+
+    for cell in child_possible_variables:
+        r = cell[1][0]
+        c = cell[1][1]
+
+        adj_lit_cells = count_adjacent_lit_cells(puzzle, r, c)
+
+        constraints = adj_lit_cells
+        # randomly pick one to pick if the constraints of this cell is the same as the current most constrained
+        if constraints == curr_most_constrained[0] and random.randint(0, 1) == 0:
+            curr_most_constrained = (constraints, cell)
+        if constraints > curr_most_constrained[0]:
+            curr_most_constrained = (constraints, cell)
+
+    return curr_most_constrained[1]
+
 
 main_puzzle = read_puzzle()
 prioritize_variables(main_puzzle)
-backtrack()
+print_puzzle(backtrack())
+print(num_nodes)
