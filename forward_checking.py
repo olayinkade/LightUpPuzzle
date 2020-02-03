@@ -312,7 +312,8 @@ def is_map_lit_up_and_clean_map(puzzle: List[List[str]]) -> bool:
 
 
 def find_most_constrained(puzzle: List[List[str]], empty_cells: List[List[int]]):
-    curr_most_constrained = (-1, -1)
+    curr_most_constrained = (-1, [])
+    # curr_most_constrained = (-1, -1)
     light_map_up(puzzle)
 
     for cell in empty_cells:
@@ -326,13 +327,17 @@ def find_most_constrained(puzzle: List[List[str]], empty_cells: List[List[int]])
 
         constraints = num_walls + location + adj_lit_cells
         # randomly pick one to pick if the constraints of this cell is the same as the current most constrained
-        if constraints == curr_most_constrained[0] and random.randint(0, 1) == 0:
-            curr_most_constrained = (constraints, cell)
+        # if constraints == curr_most_constrained[0] and random.randint(0, 1) == 0:
+        #     curr_most_constrained = (constraints, cell)
+        if constraints == curr_most_constrained[0]:
+            curr_most_constrained[1].append(cell)
         if constraints > curr_most_constrained[0]:
-            curr_most_constrained = (constraints, cell)
+            curr_most_constrained = (constraints, [cell])
+            # curr_most_constrained = (constraints, cell)
 
     is_map_lit_up_and_clean_map(puzzle)
-    return curr_most_constrained[1]
+    return curr_most_constrained[1][random.randint(0, len(curr_most_constrained[1])-1)]
+    # return curr_most_constrained[1]
 
 
 def find_most_constraining(puzzle: List[List[str]], empty_cells: List[List[int]]):
@@ -352,6 +357,12 @@ def find_most_constraining(puzzle: List[List[str]], empty_cells: List[List[int]]
             cells.append(cell)
     is_map_lit_up_and_clean_map(puzzle)
     return cells[random.randint(0, len(cells)-1)]
+
+
+# this is a combination of most constrained and most constraining heuristics, with most constraining heuristic acts as a
+# tie breaker for most constrained heuristic.
+# def hybrid_heuristic(puzzle: List[List[str]], empty_cells: List[List[int]]):
+
 
 
 def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
