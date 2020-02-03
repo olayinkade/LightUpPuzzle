@@ -1,3 +1,5 @@
+import argparse
+import sys
 from typing import List
 import random
 import light_up_puzzle
@@ -151,19 +153,33 @@ def can_bulb_be_here(puzzle: List[List[str]], r: int, c: int) -> bool:
     return True
 
 
-def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic='most_constrained'):
+def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic=str):
     global num_nodes
     num_nodes += 1
+    if num_nodes < 10000:
+        if num_nodes % 3 == 0:
+            print('\rProcessing.', end='')
+        if num_nodes % 3 == 1:
+            print('\rProcessing..', end='')
+        if num_nodes % 3 == 2:
+            print('\rProcessing...', end='')
     if num_nodes % 10000 == 0:
-        print(num_nodes)
+        print('\rAlready processed {} nodes.'.format(num_nodes), end='')
     if num_nodes == 5000000:
         return 'Too many nodes. Timeout'
     if is_puzzle_solved(puzzle):
         return puzzle
     if len(empty_cells) == 0 and check_curr_state(puzzle, empty_cells):
         return 'back'
-    # chosen_cell = find_most_constrained(puzzle, empty_cells)
-    chosen_cell = find_most_constraining(puzzle, empty_cells)
+
+    chosen_cell = []
+    if heuristic == 'most_constrained':
+        chosen_cell = find_most_constrained(puzzle, empty_cells)
+    elif heuristic == 'most_constraining':
+        chosen_cell = find_most_constraining(puzzle, empty_cells)
+    # elif heuristic == 'hybrid':
+    else:
+        print('Heuristic must be either "most_constrained", "most_constraining" or "hybrid"')
     empty_cells.remove(chosen_cell)
 
     r, c = chosen_cell[0], chosen_cell[1]
@@ -200,7 +216,9 @@ def is_puzzle_solved(puzzle: List[List[str]]) -> bool:
 
     light_map_up(puzzle)
 
-    # TODO: probably should print the solution here
+    print('\nDone!')
+    print_puzzle(puzzle)
+    print("--------------")
     return is_map_lit_up_and_clean_map(puzzle)
 
 
@@ -289,6 +307,7 @@ def is_map_lit_up_and_clean_map(puzzle: List[List[str]]) -> bool:
                 lit_up = False
             elif puzzle[r][c] == '*':
                 puzzle[r][c] = '_'
+
     return lit_up
 
 
@@ -344,10 +363,10 @@ def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
     return empty_cells
 
 
-def solve(puzzle: List[List[str]]):
+def solve(puzzle: List[List[str]], heuristic: str):
     domain = ('b', '_')
     non_assigned = get_empty_cells(puzzle)
-    return forward_checking(puzzle, domain, non_assigned)
+    return forward_checking(puzzle, domain, non_assigned, heuristic)
 
 
 def print_puzzle(puzzle: List[List[str]]):
@@ -357,15 +376,28 @@ def print_puzzle(puzzle: List[List[str]]):
         print()
 
 
-# TODO: add different input reading methods and heuristic detection
-puzzle = light_up_puzzle.read_puzzle()
-# print(type(puzzle))
-starting_time = time.time()
-solution = solve(puzzle)
-ending_time = time.time()
-if solution == 'Too many nodes. Timeout':
-    print('Too many nodes. Timeout.\nIt took {} seconds.'.format(ending_time - starting_time))
-else:
-    print_puzzle(solution)
-    print("The puzzle was solved in {} seconds.".format(ending_time - starting_time))
-print('Visited {} nodes.'.format(num_nodes))
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+    arg_parser = argparse.ArgumentParser()
+    # arg_parser.add_argument('--input', action='store', dest='input', type=str, default='')
+    arg_parser.add_argument('--heuristic', action='store', dest='heuristic', type=str, default='most_constrained')
+
+    arguments = arg_parser.parse_args(argv)
+
+    # TODO: add different input reading methods and heuristic detection
+    puzzle = light_up_puzzle.read_puzzle()
+    # print(type(puzzle))
+    starting_time = time.time()
+    solution = solve(puzzle, arguments.heuristic)
+    ending_time = time.time()
+    if solution == 'Too many nodes. Timeout':
+        print('Too many nodes. Timeout.\nIt took {} seconds.'.format(ending_time - starting_time))
+    else:
+        print_puzzle(solution)
+        print("The puzzle was solved in {} seconds.".format(ending_time - starting_time))
+    print('Visited {} nodes.'.format(num_nodes))
+
+
+if __name__ == '__main__':
+    main()
