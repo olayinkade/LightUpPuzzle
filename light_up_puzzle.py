@@ -122,7 +122,7 @@ def backtrack():
     stack.append(([-1, -1], variables, 0, already_placed))
     global num_nodes
     num_nodes = 1
-    while stack is not []:
+    while len(stack) != 0:
         curr = stack.pop()
         num_nodes += 1
         if curr[0][0] != -1:
@@ -145,7 +145,7 @@ def backtrack():
             puzzle = place_bulbs(curr[3], curr[0][1], "b", "_", "*")
             curr[1].remove(curr[0])
 
-        find_most_constrained(main_puzzle, curr[1])
+        hybrid(main_puzzle, curr[1])
 
         for x in range(len(curr[1])):
             child_position = curr[1][x]
@@ -197,6 +197,36 @@ def place_bulbs(existing_bulb, curr, placeholder, new, old):
                 break
     return puzzle
 
+
+def num_cells_lit(curr, new):
+    puzzle = main_puzzle
+    num_lit = 0
+
+    wall_seen_u = False
+    wall_seen_d = False
+    wall_seen_l = False
+    wall_seen_r = False
+
+    for y in range(1, len(puzzle)):
+        if curr[0] + y <= len(puzzle) - 1 and puzzle[curr[0] + y][curr[1]] == new and not wall_seen_d:
+            num_lit += 1
+        elif curr[0] + y <= len(puzzle) - 1 and (puzzle[curr[0] + y][curr[1]].isdigit()):
+            wall_seen_d = True
+        if curr[0] - y >= 0 and puzzle[curr[0] - y][curr[1]] == new and not wall_seen_u:
+            num_lit += 1
+        elif curr[0] - y >= 0 and (puzzle[curr[0] - y][curr[1]].isdigit()):
+            wall_seen_u = True
+        if curr[1] + y <= len(puzzle) - 1 and puzzle[curr[0]][curr[1] + y] == new and not wall_seen_r:
+            num_lit += 1
+        elif curr[1] + y <= len(puzzle) - 1 and (puzzle[curr[0]][curr[1] + y].isdigit()):
+            wall_seen_r = True
+        if curr[1] - y >= 0 and puzzle[curr[0]][curr[1] - y] == new and not wall_seen_l:
+            num_lit += 1
+        elif curr[1] - y >= 0 and (puzzle[curr[0]][curr[1] - y].isdigit()):
+            wall_seen_l = True
+        if wall_seen_l and wall_seen_d and wall_seen_r and wall_seen_u:
+            break
+    return num_lit
 
 # This function reads in the puzzle from the text file
 def read_puzzle():
@@ -336,6 +366,64 @@ def find_most_constrained(puzzle, child_possible_variables):
                 constraints = var[0]
                 break
         constraints += adj_lit_cells
+        cell[0] = constraints
+
+    child_possible_variables.sort()
+
+    max = child_possible_variables[-1][0]
+    y = -1
+    for cell in child_possible_variables:
+        if max == cell[0]:
+            y += 1
+    chosen = random.randint(0, y) * -1
+
+    item_1 = child_possible_variables[-1]
+    child_possible_variables[-1] = child_possible_variables[-1 + chosen]
+    child_possible_variables[-1 + chosen] = item_1
+
+
+def find_most_constraining(puzzle, child_possible_variables):
+    prioritize_by_wall_neighbours(puzzle)
+    for cell in child_possible_variables:
+        r = cell[1][0]
+        c = cell[1][1]
+        constraints = -1
+        num_lit = num_cells_lit(cell[1], "_")
+        for var in variables:
+            if var[1][0] == r and var[1][1] == c:
+                constraints = var[0]
+                break
+        constraints += num_lit
+        cell[0] = constraints
+
+    child_possible_variables.sort()
+
+    max = child_possible_variables[-1][0]
+    y = -1
+    for cell in child_possible_variables:
+        if max == cell[0]:
+            y += 1
+    chosen = random.randint(0, y) * -1
+
+    item_1 = child_possible_variables[-1]
+    child_possible_variables[-1] = child_possible_variables[-1 + chosen]
+    child_possible_variables[-1 + chosen] = item_1
+
+
+def hybrid(puzzle, child_possible_variables):
+    prioritize_by_wall_neighbours(puzzle)
+
+    for cell in child_possible_variables:
+        r = cell[1][0]
+        c = cell[1][1]
+        constraints = -1
+        adj_lit_cells = count_adjacent_lit_cells(puzzle, r, c)
+        num_lit = num_cells_lit(cell[1], "_")
+        for var in variables:
+            if var[1][0] == r and var[1][1] == c:
+                constraints = var[0]
+                break
+        constraints += adj_lit_cells + num_lit
         cell[0] = constraints
 
     child_possible_variables.sort()
