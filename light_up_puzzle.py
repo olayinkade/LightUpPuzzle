@@ -88,8 +88,14 @@ def remove_completed_wall(puzzle):
     completed_walls = []
     for x in range(len(valid_wall)):
         valid_neighbours = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle, True)
-        if len(valid_neighbours) == 0 :
+        if len(valid_neighbours) == 0:
             completed_walls.append(valid_wall[x])
+        if count_bulbs(puzzle, valid_wall[x]) == int(puzzle[valid_wall[x][0]][valid_wall[x][1]]):
+            valid_neighbours_a = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
+            for var in valid_neighbours_a:
+                for cells in variables:
+                    if cells[1] == var:
+                        variables.remove(cells)
 
     for wall in completed_walls:
         valid_wall.remove(wall)
