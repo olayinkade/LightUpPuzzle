@@ -154,7 +154,7 @@ def can_bulb_be_here(puzzle: List[List[str]], r: int, c: int) -> bool:
     return True
 
 
-def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic=str):
+def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic: str):
     global num_nodes
     num_nodes += 1
     if num_nodes < 10000:
@@ -173,21 +173,32 @@ def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic=str
     if len(empty_cells) == 0 and check_curr_state(puzzle, empty_cells):
         return 'back'
 
-    chosen_cell = []
+    chosen_cells, chosen_cell = [], []
+    # print("&&&&&&&" + heuristic)
+    # check the input to see what heuristic should be used
     if heuristic == 'most_constrained':
-        chosen_cell = find_most_constrained(puzzle, empty_cells)
+        # print('Using most constrained heuristic...')
+        chosen_cells = find_most_constrained(puzzle, empty_cells)
+        # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
     elif heuristic == 'most_constraining':
-        chosen_cell = find_most_constraining(puzzle, empty_cells)
-    # elif heuristic == 'hybrid':
+        # print('Using most constraining heuristic...')
+        chosen_cells = find_most_constraining(puzzle, empty_cells)
+        # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
+    elif heuristic == 'hybrid':
+        # print('Using hybrid heuristic...')
+        chosen_cells = hybrid_heuristic(puzzle, empty_cells)
     else:
         print('Heuristic must be either "most_constrained", "most_constraining" or "hybrid"')
+    if len(chosen_cells) >= 1:
+        chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
+    # if len(chosen_cell) == 1:
     empty_cells.remove(chosen_cell)
 
     r, c = chosen_cell[0], chosen_cell[1]
     for val in domain:
         puzzle[r][c] = val
         if (val != '_' and can_bulb_be_here(puzzle, r, c)) or val == '_':
-            result = forward_checking(puzzle, domain, empty_cells, heuristic='most_constrained')
+            result = forward_checking(puzzle, domain, empty_cells, heuristic)
             if result != 'back':
                 return result
 
@@ -337,8 +348,8 @@ def find_most_constrained(puzzle: List[List[str]], empty_cells: List[List[int]])
             # curr_most_constrained = (constraints, cell)
 
     is_map_lit_up_and_clean_map(puzzle)
-    return curr_most_constrained[1][random.randint(0, len(curr_most_constrained[1])-1)]
-    # return curr_most_constrained[1]
+    # return curr_most_constrained[1][random.randint(0, len(curr_most_constrained[1])-1)]
+    return curr_most_constrained[1]
 
 
 def find_most_constraining(puzzle: List[List[str]], empty_cells: List[List[int]]):
@@ -357,13 +368,20 @@ def find_most_constraining(puzzle: List[List[str]], empty_cells: List[List[int]]
         elif to_be_lit_up == max_count:
             cells.append(cell)
     is_map_lit_up_and_clean_map(puzzle)
-    return cells[random.randint(0, len(cells)-1)]
+    # return cells[random.randint(0, len(cells)-1)]
+    return cells
 
 
 # this is a combination of most constrained and most constraining heuristics, with most constraining heuristic acts as a
 # tie breaker for most constrained heuristic.
-# def hybrid_heuristic(puzzle: List[List[str]], empty_cells: List[List[int]]):
-
+def hybrid_heuristic(puzzle: List[List[str]], empty_cells: List[List[int]]):
+    chosen_cells = find_most_constrained(puzzle, empty_cells)
+    # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
+    # empty_cells.remove(chosen_cell)
+    if len(chosen_cells) > 1:
+        chosen_cells = find_most_constraining(puzzle, empty_cells)
+    # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
+    return chosen_cells
 
 
 def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
@@ -378,6 +396,8 @@ def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
 def solve(puzzle: List[List[str]], heuristic: str):
     domain = ('b', '_')
     non_assigned = get_empty_cells(puzzle)
+    print("*****")
+    print(heuristic)
     return forward_checking(puzzle, domain, non_assigned, heuristic)
 
 
@@ -389,7 +409,6 @@ def print_puzzle(puzzle: List[List[str]]):
 
 
 def main(argv=None):
-    print("****")
     if argv is None:
         argv = sys.argv[1:]
     arg_parser = argparse.ArgumentParser()
@@ -413,7 +432,4 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
-    print('22222')
     main()
-# print("(((((((111)))))))")
-# main()
