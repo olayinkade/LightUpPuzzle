@@ -205,6 +205,6 @@ def generate_valid_neighbours(row, col, length, puzzle):
     return valid_neighbours
 
 
-main_puzzle = read_puzzle()
-prioritize_variables(main_puzzle)
-backtrack()
+# main_puzzle = read_puzzle()
+# prioritize_variables(main_puzzle)
+# backtrack()

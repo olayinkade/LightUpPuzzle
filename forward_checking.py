@@ -2,7 +2,8 @@ import argparse
 import sys
 from typing import List
 import random
-import light_up_puzzle
+# import light_up_puzzle
+import library
 import time
 
 wall_values = {'0', '1', '2', '3', '4'}
@@ -388,6 +389,7 @@ def print_puzzle(puzzle: List[List[str]]):
 
 
 def main(argv=None):
+    print("****")
     if argv is None:
         argv = sys.argv[1:]
     arg_parser = argparse.ArgumentParser()
@@ -397,7 +399,7 @@ def main(argv=None):
     arguments = arg_parser.parse_args(argv)
 
     # TODO: add different input reading methods and heuristic detection
-    puzzle = light_up_puzzle.read_puzzle()
+    puzzle = library.read_puzzle()
     # print(type(puzzle))
     starting_time = time.time()
     solution = solve(puzzle, arguments.heuristic)
@@ -411,4 +413,7 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
+    print('22222')
     main()
+# print("(((((((111)))))))")
+# main()
