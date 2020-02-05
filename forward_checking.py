@@ -1,6 +1,9 @@
+import argparse
+import sys
 from typing import List
 import random
-import light_up_puzzle
+# import light_up_puzzle
+import library
 import time
 
 wall_values = {'0', '1', '2', '3', '4'}
@@ -16,7 +19,7 @@ def check_edge_corner(puzzle: List[List[str]], r: int, c: int) -> int:
     return status
 
 
-def get_total_potential_adjacent(puzzle: List[List[str]], r: int, c: int) -> int:
+def get_total_potential_adjacent(puzzle, r: int, c: int) -> int:
     rows, cols, count = len(puzzle), len(puzzle[0]), 0
 
     if r > 0 and isinstance(puzzle[r-1][c], int) and puzzle[r-1][c] >= 2:
@@ -30,7 +33,7 @@ def get_total_potential_adjacent(puzzle: List[List[str]], r: int, c: int) -> int
     return count
 
 
-def prioritize_bulbs(puzzle: List[List[str]], r: int, c: int):
+def prioritize_bulbs(puzzle, r: int, c: int):
     moving_r = r - 1
     while moving_r >= 0 and isinstance(puzzle[moving_r][c], int):
         puzzle[moving_r][c] = puzzle[moving_r][c] % 2
@@ -78,7 +81,7 @@ def prioritize_walls(puzzle, r, c):
             prioritize_bulbs(puzzle, r, moving_c)
 
 
-def generate_potential_bulbs_to_wall(puzzle: List[List[int]], r: int, c: int) -> int:
+def generate_potential_bulbs_to_wall(puzzle, r: int, c: int) -> int:
     num_bulbs = 0
     if r > 0 and isinstance(puzzle[r-1][c], int) and puzzle[r-1][c] >= 2:
         num_bulbs += 1
@@ -151,29 +154,55 @@ def can_bulb_be_here(puzzle: List[List[str]], r: int, c: int) -> bool:
     return True
 
 
-def forward_checking(puzzle: List[List[str]], domain, non_assigned_cells, heuristic='most_constrained'):
+def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic: str):
     global num_nodes
     num_nodes += 1
+    if num_nodes < 10000:
+        if num_nodes % 3 == 0:
+            print('\rProcessing.', end='')
+        if num_nodes % 3 == 1:
+            print('\rProcessing..', end='')
+        if num_nodes % 3 == 2:
+            print('\rProcessing...', end='')
     if num_nodes % 10000 == 0:
-        print(num_nodes)
+        print('\rAlready processed {} nodes.'.format(num_nodes), end='')
     if num_nodes == 5000000:
         return 'Too many nodes. Timeout'
     if is_puzzle_solved(puzzle):
         return puzzle
-    if len(non_assigned_cells) == 0 and check_curr_state(puzzle, non_assigned_cells):
+    if len(empty_cells) == 0 and check_curr_state(puzzle, empty_cells):
         return 'back'
-    most_constrained = find_most_constrained(puzzle, non_assigned_cells)
-    non_assigned_cells.remove(most_constrained)
 
-    r, c = most_constrained[0], most_constrained[1]
+    chosen_cells, chosen_cell = [], []
+    # print("&&&&&&&" + heuristic)
+    # check the input to see what heuristic should be used
+    if heuristic == 'most_constrained':
+        # print('Using most constrained heuristic...')
+        chosen_cells = find_most_constrained(puzzle, empty_cells)
+        # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
+    elif heuristic == 'most_constraining':
+        # print('Using most constraining heuristic...')
+        chosen_cells = find_most_constraining(puzzle, empty_cells)
+        # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
+    elif heuristic == 'hybrid':
+        # print('Using hybrid heuristic...')
+        chosen_cells = hybrid_heuristic(puzzle, empty_cells)
+    else:
+        print('Heuristic must be either "most_constrained", "most_constraining" or "hybrid"')
+    if len(chosen_cells) >= 1:
+        chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
+    # if len(chosen_cell) == 1:
+    empty_cells.remove(chosen_cell)
+
+    r, c = chosen_cell[0], chosen_cell[1]
     for val in domain:
         puzzle[r][c] = val
         if (val != '_' and can_bulb_be_here(puzzle, r, c)) or val == '_':
-            result = forward_checking(puzzle, domain, non_assigned_cells, heuristic='most_constrained')
+            result = forward_checking(puzzle, domain, empty_cells, heuristic)
             if result != 'back':
                 return result
 
-    non_assigned_cells.append(most_constrained)
+    empty_cells.append(chosen_cell)
     return 'back'
 
 
@@ -199,7 +228,9 @@ def is_puzzle_solved(puzzle: List[List[str]]) -> bool:
 
     light_map_up(puzzle)
 
-    # TODO: probably should print the solution here
+    print('\nDone!')
+    print_puzzle(puzzle)
+    print("--------------")
     return is_map_lit_up_and_clean_map(puzzle)
 
 
@@ -223,6 +254,35 @@ def light_map_up(puzzle: List[List[str]]):
                 while c + k < len(puzzle[r]) and (puzzle[r][c + k] == '_' or puzzle[r][c + k] == '*'):
                     puzzle[r][c + k] = '*'
                     k += 1
+
+
+# given a bulb position, count the number of cells should be lit up in the corresponding row and column
+def num_cells_should_be_lit(puzzle: List[List[str]], r: int, c: int) -> int:
+    num_cells = 0
+    row_up = r - 1
+    while row_up >= 0 and (puzzle[row_up][c] == '_' or puzzle[row_up][c] == '*'):
+        if puzzle[row_up][c] == '_':
+            num_cells += 1
+        row_up -= 1
+
+    row_down = r + 1
+    while row_down < len(puzzle) and (puzzle[row_down][c] == '_' or puzzle[row_down][c] == '*'):
+        if puzzle[row_down][c] == '_':
+            num_cells += 1
+        row_down += 1
+
+    col_left = c - 1
+    while col_left >= 0 and (puzzle[r][col_left] == '_' or puzzle[r][col_left] == '*'):
+        if puzzle[r][col_left] == '_':
+            num_cells += 1
+        col_left -= 1
+
+    col_right = c + 1
+    while col_right < len(puzzle[0]) and (puzzle[r][col_right] == '_' or puzzle[r][col_right] == '*'):
+        if puzzle[r][col_right] == '_':
+            num_cells += 1
+        col_right += 1
+    return num_cells
 
 
 def count_walls_around(puzzle: List[List[str]], r: int, c: int) -> int:
@@ -259,14 +319,16 @@ def is_map_lit_up_and_clean_map(puzzle: List[List[str]]) -> bool:
                 lit_up = False
             elif puzzle[r][c] == '*':
                 puzzle[r][c] = '_'
+
     return lit_up
 
 
-def find_most_constrained(puzzle: List[List[str]], non_assigned: List[List[int]]) -> int:
-    curr_most_constrained = (-1, -1)
+def find_most_constrained(puzzle: List[List[str]], empty_cells: List[List[int]]):
+    curr_most_constrained = (-1, [])
+    # curr_most_constrained = (-1, -1)
     light_map_up(puzzle)
 
-    for cell in non_assigned:
+    for cell in empty_cells:
         r = cell[0]
         c = cell[1]
 
@@ -277,13 +339,49 @@ def find_most_constrained(puzzle: List[List[str]], non_assigned: List[List[int]]
 
         constraints = num_walls + location + adj_lit_cells
         # randomly pick one to pick if the constraints of this cell is the same as the current most constrained
-        if constraints == curr_most_constrained[0] and random.randint(0, 1) == 0:
-            curr_most_constrained = (constraints, cell)
+        # if constraints == curr_most_constrained[0] and random.randint(0, 1) == 0:
+        #     curr_most_constrained = (constraints, cell)
+        if constraints == curr_most_constrained[0]:
+            curr_most_constrained[1].append(cell)
         if constraints > curr_most_constrained[0]:
-            curr_most_constrained = (constraints, cell)
+            curr_most_constrained = (constraints, [cell])
+            # curr_most_constrained = (constraints, cell)
 
     is_map_lit_up_and_clean_map(puzzle)
+    # return curr_most_constrained[1][random.randint(0, len(curr_most_constrained[1])-1)]
     return curr_most_constrained[1]
+
+
+def find_most_constraining(puzzle: List[List[str]], empty_cells: List[List[int]]):
+    cells = []
+    max_count = 0
+
+    light_map_up(puzzle)
+
+    for cell in empty_cells:
+        r = cell[0]
+        c = cell[1]
+        to_be_lit_up = num_cells_should_be_lit(puzzle, r, c)
+        if to_be_lit_up > max_count:
+            cells = [cell]
+            max_count = to_be_lit_up
+        elif to_be_lit_up == max_count:
+            cells.append(cell)
+    is_map_lit_up_and_clean_map(puzzle)
+    # return cells[random.randint(0, len(cells)-1)]
+    return cells
+
+
+# this is a combination of most constrained and most constraining heuristics, with most constraining heuristic acts as a
+# tie breaker for most constrained heuristic.
+def hybrid_heuristic(puzzle: List[List[str]], empty_cells: List[List[int]]):
+    chosen_cells = find_most_constrained(puzzle, empty_cells)
+    # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
+    # empty_cells.remove(chosen_cell)
+    if len(chosen_cells) > 1:
+        chosen_cells = find_most_constraining(puzzle, empty_cells)
+    # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
+    return chosen_cells
 
 
 def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
@@ -295,10 +393,12 @@ def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
     return empty_cells
 
 
-def solve(puzzle: List[List[str]]):
+def solve(puzzle: List[List[str]], heuristic: str):
     domain = ('b', '_')
     non_assigned = get_empty_cells(puzzle)
-    return forward_checking(puzzle, domain, non_assigned)
+    print("*****")
+    print(heuristic)
+    return forward_checking(puzzle, domain, non_assigned, heuristic)
 
 
 def print_puzzle(puzzle: List[List[str]]):
@@ -308,15 +408,28 @@ def print_puzzle(puzzle: List[List[str]]):
         print()
 
 
-# TODO: add different input reading methods and heuristic detection
-puzzle = light_up_puzzle.read_puzzle()
-# print(type(puzzle))
-starting_time = time.time()
-solution = solve(puzzle)
-ending_time = time.time()
-if solution == 'Too many nodes. Timeout':
-    print('Too many nodes. Timeout.\nIt took {} seconds.'.format(ending_time - starting_time))
-else:
-    print_puzzle(solution)
-    print("The puzzle was solved in {} seconds.".format(ending_time - starting_time))
-print('Visited {} nodes.'.format(num_nodes))
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+    arg_parser = argparse.ArgumentParser()
+    # arg_parser.add_argument('--input', action='store', dest='input', type=str, default='')
+    arg_parser.add_argument('--heuristic', action='store', dest='heuristic', type=str, default='most_constrained')
+
+    arguments = arg_parser.parse_args(argv)
+
+    # TODO: add different input reading methods and heuristic detection
+    puzzle = library.read_puzzle()
+    # print(type(puzzle))
+    starting_time = time.time()
+    solution = solve(puzzle, arguments.heuristic)
+    ending_time = time.time()
+    if solution == 'Too many nodes. Timeout':
+        print('Too many nodes. Timeout.\nIt took {} seconds.'.format(ending_time - starting_time))
+    else:
+        print_puzzle(solution)
+        print("The puzzle was solved in {} seconds.".format(ending_time - starting_time))
+    print('Visited {} nodes.'.format(num_nodes))
+
+
+if __name__ == '__main__':
+    main()
