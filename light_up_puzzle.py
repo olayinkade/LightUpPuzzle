@@ -13,11 +13,18 @@ def prioritize_by_wall_neighbours(puzzle):
 
     for x in range(len(valid_wall)):
         valid_neighbours = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
-        for z in range(len(valid_neighbours)):
-            for a in range(len(variables)):
-                if variables[a][1] == valid_neighbours[z]:
-                    variables[a][0] += 1
-                    break
+        if int(puzzle[valid_wall[x][0]][valid_wall[x][1]]) != count_bulbs(puzzle, valid_wall[x]):
+            for z in range(len(valid_neighbours)):
+                for a in range(len(variables)):
+                    if variables[a][1] == valid_neighbours[z]:
+                        variables[a][0] += 1
+                        break
+        else:
+            for z in range(len(valid_neighbours)):
+                for a in range(len(variables)):
+                    if variables[a][1] == valid_neighbours[z]:
+                        variables[a][0] -= 2
+                        break
 
 
 def remove_zero_wall_neighbours(puzzle):
@@ -87,10 +94,8 @@ def remove_variables_that_is_lit(puzzle):
 def remove_completed_wall(puzzle):
     completed_walls = []
     for x in range(len(valid_wall)):
-        valid_neighbours = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle, True)
-        if len(valid_neighbours) == 0:
-            completed_walls.append(valid_wall[x])
         if count_bulbs(puzzle, valid_wall[x]) == int(puzzle[valid_wall[x][0]][valid_wall[x][1]]):
+            completed_walls.append(valid_wall[x])
             valid_neighbours_a = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
             for var in valid_neighbours_a:
                 for cells in variables:
@@ -151,7 +156,7 @@ def backtrack():
             puzzle = place_bulbs(curr[3], curr[0][1], "b", "_", "*")
             curr[1].remove(curr[0])
 
-        hybrid(main_puzzle, curr[1])
+        find_most_constraining(main_puzzle, curr[1])
 
         for x in range(len(curr[1])):
             child_position = curr[1][x]
@@ -233,6 +238,7 @@ def num_cells_lit(curr, new):
         if wall_seen_l and wall_seen_d and wall_seen_r and wall_seen_u:
             break
     return num_lit
+
 
 # This function reads in the puzzle from the text file
 def read_puzzle():
@@ -342,14 +348,17 @@ def generate_valid_neighbours(row, col, length, puzzle, bulb_inclusive=False):
 
 def count_adjacent_lit_cells(puzzle, r, c) -> int:
     count = 0
-    if r > 0 and puzzle[r-1][c] == '*':
+    if r > 0 and (puzzle[r-1][c] == '*' or puzzle[r-1][c] == 'b'):
         count += 1
-    if r < len(puzzle)-1 and puzzle[r+1][c] == '*':
+    if r < len(puzzle)-1 and (puzzle[r+1][c] == '*' or puzzle[r+1][c] == 'b') :
         count += 1
-    if c > 0 and puzzle[r][c-1] == '*':
+    if c > 0 and (puzzle[r][c-1] == '*' or puzzle[r][c-1] == 'b'):
         count += 1
-    if c < len(puzzle[0])-1 and puzzle[r][c+1] == '*':
+    if c < len(puzzle[0])-1 and (puzzle[r][c+1] == '*' or puzzle[r][c+1] == 'b'):
         count += 1
+    if puzzle[r][c] == '*':
+        count += 2
+
     return count
 
 
@@ -401,6 +410,13 @@ def find_most_constraining(puzzle, child_possible_variables):
                 break
         constraints += num_lit
         cell[0] = constraints
+    for wall in valid_wall:
+        possible_position = generate_valid_neighbours(wall[0], wall[1], len(puzzle), puzzle, True)
+        if int(puzzle[wall[0]][wall[1]]) > count_bulbs(puzzle, wall):
+            for poss in possible_position:
+                for cell in child_possible_variables:
+                    if cell[1] == poss:
+                        cell[0] += 3
 
     child_possible_variables.sort()
 
@@ -452,3 +468,5 @@ if not prioritize_variables(main_puzzle):
     print(num_nodes)
 else:
     print_puzzle(main_puzzle)
+
+print("Done")
