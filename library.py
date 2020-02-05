@@ -26,3 +26,26 @@ def read_puzzle():
                     valid_wall.append([x, y])
 
     return puzzle
+
+
+def generate_valid_neighbours(row, col, length, puzzle, bulb_inclusive=False):
+    valid_neighbours = []
+
+    if row > 0:
+        if not puzzle[row-1][col].isdigit() and not (bulb_inclusive and (puzzle[row-1][col] == "b" or puzzle[row-1][col]
+                                                                         == "*")):
+            valid_neighbours.append([row - 1, col])
+    if row < length-1:
+        if not puzzle[row+1][col].isdigit() and not (bulb_inclusive and (puzzle[row+1][col] == "b" or puzzle[row+1][col]
+                                                                         == "*")):
+            valid_neighbours.append([row + 1, col])
+    if col > 0:
+        if not puzzle[row][col-1].isdigit() and not (bulb_inclusive and (puzzle[row][col-1] == "b" or puzzle[row][col-1]
+                                                                         == "*")):
+            valid_neighbours.append([row, col - 1])
+    if col < length-1:
+        if not puzzle[row][col+1].isdigit() and not (bulb_inclusive and (puzzle[row][col+1] == "b" or puzzle[row][col+1]
+                                                                         == "*")):
+            valid_neighbours.append([row, col + 1])
+
+    return valid_neighbours

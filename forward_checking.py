@@ -5,6 +5,7 @@ import random
 # import light_up_puzzle
 import library
 import time
+import copy
 
 wall_values = {'0', '1', '2', '3', '4'}
 num_nodes = 0
@@ -228,7 +229,7 @@ def is_puzzle_solved(puzzle: List[List[str]]) -> bool:
 
     light_map_up(puzzle)
 
-    print('\nDone!')
+    print('\nBacktracking!')
     print_puzzle(puzzle)
     print("--------------")
     return is_map_lit_up_and_clean_map(puzzle)
@@ -308,6 +309,8 @@ def count_adjacent_lit_cells(puzzle: List[List[str]], r, c) -> int:
         count += 1
     if c < len(puzzle[0])-1 and puzzle[r][c+1] == '*':
         count += 1
+    if puzzle[r][c] == '*':
+        count += 3
     return count
 
 
@@ -375,12 +378,14 @@ def find_most_constraining(puzzle: List[List[str]], empty_cells: List[List[int]]
 # this is a combination of most constrained and most constraining heuristics, with most constraining heuristic acts as a
 # tie breaker for most constrained heuristic.
 def hybrid_heuristic(puzzle: List[List[str]], empty_cells: List[List[int]]):
+    light_map_up(puzzle)
     chosen_cells = find_most_constrained(puzzle, empty_cells)
     # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
     # empty_cells.remove(chosen_cell)
     if len(chosen_cells) > 1:
         chosen_cells = find_most_constraining(puzzle, empty_cells)
     # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
+    is_map_lit_up_and_clean_map(puzzle)
     return chosen_cells
 
 
@@ -393,9 +398,68 @@ def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
     return empty_cells
 
 
+# place bulbs in places that must be bulbs
+def pre_process(puzzle: List[List[str]], empty_cells: List[List[int]]):
+    stop = False
+    count = 0
+    while not stop:
+        count += 1
+        # stop = False
+        new_bulb_placed = False
+        for wall in library.valid_wall:
+
+            sure_variable = library.generate_valid_neighbours(wall[0], wall[1], len(puzzle), puzzle)
+            count_bulbs = 0
+            count_empty_cells = 0
+            count_stars = 0
+            for var in sure_variable:
+                if puzzle[var[0]][var[1]] == 'b':
+                    count_bulbs += 1
+                elif puzzle[var[0]][var[1]] == '_':
+                    count_empty_cells += 1
+                elif puzzle[var[0]][var[1]] == '*':
+                    count_stars += 1
+            if count_empty_cells > 0 and count_empty_cells == int(puzzle[wall[0]][wall[1]]) - count_bulbs:
+                for var in sure_variable:
+                    if puzzle[var[0]][var[1]] == '_':
+                        puzzle[var[0]][var[1]] = 'b'
+                        empty_cells.remove(var)
+                # stop = True
+                new_bulb_placed = True
+                light_map_up(puzzle)
+        if not new_bulb_placed:
+            stop = True
+
+    variables = copy.deepcopy(empty_cells)
+    for cell in variables:
+        if puzzle[cell[0]][cell[1]] == '*':
+            empty_cells.remove(cell)
+
+    remove_zero_wall_neighbours(puzzle, empty_cells)
+
+    print_puzzle(puzzle)
+    print(count)
+    is_map_lit_up_and_clean_map(puzzle)
+
+
+def remove_zero_wall_neighbours(puzzle: List[List[str]], empty_cells: List[List[int]]):
+    invalid_neighbours = []
+    # remove all neighbours of a zero wall
+    for x in range(len(library.invalid_wall)):
+        invalid_neighbours.extend(library.generate_valid_neighbours(library.invalid_wall[x][0],
+                                                            library.invalid_wall[x][1], len(puzzle), puzzle))
+    for x in range(len(invalid_neighbours)):
+        # for y in range(len(empty_cells)):
+        #     if empty_cells[y][1] == invalid_neighbours[x]:
+        if invalid_neighbours[x] in empty_cells:
+            empty_cells.remove(invalid_neighbours[x])
+                # break
+
+
 def solve(puzzle: List[List[str]], heuristic: str):
     domain = ('b', '_')
     non_assigned = get_empty_cells(puzzle)
+    pre_process(puzzle, non_assigned)
     print("*****")
     print(heuristic)
     return forward_checking(puzzle, domain, non_assigned, heuristic)
