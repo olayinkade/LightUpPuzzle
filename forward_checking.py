@@ -23,13 +23,13 @@ def check_edge_corner(puzzle: List[List[str]], r: int, c: int) -> int:
 def get_total_potential_adjacent(puzzle, r: int, c: int) -> int:
     rows, cols, count = len(puzzle), len(puzzle[0]), 0
 
-    if r > 0 and isinstance(puzzle[r-1][c], int) and puzzle[r-1][c] >= 2:
+    if r > 0 and isinstance(puzzle[r - 1][c], int) and puzzle[r - 1][c] >= 2:
         count += 1
-    if r < rows-1 and isinstance(puzzle[r+1][c], int) and puzzle[r+1][c] >= 2:
+    if r < rows - 1 and isinstance(puzzle[r + 1][c], int) and puzzle[r + 1][c] >= 2:
         count += 1
-    if c > 0 and isinstance(puzzle[r][c-1], int) and puzzle[r][c-1] >= 2:
+    if c > 0 and isinstance(puzzle[r][c - 1], int) and puzzle[r][c - 1] >= 2:
         count += 1
-    if c < cols-1 and isinstance(puzzle[r][c+1], int) and puzzle[r][c+1] >= 2:
+    if c < cols - 1 and isinstance(puzzle[r][c + 1], int) and puzzle[r][c + 1] >= 2:
         count += 1
     return count
 
@@ -41,7 +41,7 @@ def prioritize_bulbs(puzzle, r: int, c: int):
         moving_r -= 1
 
     moving_r = r + 1
-    while moving_r < len(puzzle)-1 and isinstance(puzzle[moving_r][c], int):
+    while moving_r < len(puzzle) - 1 and isinstance(puzzle[moving_r][c], int):
         puzzle[moving_r][c] = puzzle[moving_r][c] % 2
         moving_r += 1
 
@@ -51,7 +51,7 @@ def prioritize_bulbs(puzzle, r: int, c: int):
         moving_c -= 1
 
     moving_c = c + 1
-    while moving_c < len(puzzle[r])-1 and isinstance(puzzle[r][moving_c], int):
+    while moving_c < len(puzzle[r]) - 1 and isinstance(puzzle[r][moving_c], int):
         puzzle[r][moving_c] = puzzle[r][moving_c] % 2
         moving_c += 1
 
@@ -59,38 +59,38 @@ def prioritize_bulbs(puzzle, r: int, c: int):
 def prioritize_walls(puzzle, r, c):
     moving_r = r - 1
     if r > 0 and isinstance(puzzle[moving_r][c], int):
-        puzzle[moving_r][c] = int(puzzle[moving_r][c]/2)*2
+        puzzle[moving_r][c] = int(puzzle[moving_r][c] / 2) * 2
         if puzzle[moving_r][c] == 2:
             prioritize_bulbs(puzzle, moving_r, c)
 
     moving_r = r + 1
-    if r < len(puzzle)-1 and isinstance(puzzle[moving_r][c], int):
-        puzzle[moving_r][c] = int(puzzle[moving_r][c]/2) * 2
+    if r < len(puzzle) - 1 and isinstance(puzzle[moving_r][c], int):
+        puzzle[moving_r][c] = int(puzzle[moving_r][c] / 2) * 2
         if puzzle[moving_r][c] == 2:
             prioritize_bulbs(puzzle, moving_r, c)
 
     moving_c = c - 1
     if c > 0 and isinstance(puzzle[r][moving_c], int):
-        puzzle[r][moving_c] = int(puzzle[r][moving_c]/2) * 2
+        puzzle[r][moving_c] = int(puzzle[r][moving_c] / 2) * 2
         if puzzle[r][moving_c] == 2:
             prioritize_bulbs(puzzle, r, moving_c)
 
     moving_c = c + 1
-    if c < len(puzzle[0])-1 and isinstance(puzzle[r][moving_c], int):
-        puzzle[r][moving_c] = int(puzzle[r][moving_c]/2) * 2
+    if c < len(puzzle[0]) - 1 and isinstance(puzzle[r][moving_c], int):
+        puzzle[r][moving_c] = int(puzzle[r][moving_c] / 2) * 2
         if puzzle[r][moving_c] == 2:
             prioritize_bulbs(puzzle, r, moving_c)
 
 
 def generate_potential_bulbs_to_wall(puzzle, r: int, c: int) -> int:
     num_bulbs = 0
-    if r > 0 and isinstance(puzzle[r-1][c], int) and puzzle[r-1][c] >= 2:
+    if r > 0 and isinstance(puzzle[r - 1][c], int) and puzzle[r - 1][c] >= 2:
         num_bulbs += 1
-    if r < len(puzzle)-1 and isinstance(puzzle[r+1][c], int) and puzzle[r+1][c] >= 2:
+    if r < len(puzzle) - 1 and isinstance(puzzle[r + 1][c], int) and puzzle[r + 1][c] >= 2:
         num_bulbs += 1
-    if c > 0 and isinstance(puzzle[r][c-1], int) and puzzle[r][c-1] >= 2:
+    if c > 0 and isinstance(puzzle[r][c - 1], int) and puzzle[r][c - 1] >= 2:
         num_bulbs += 1
-    if c < len(puzzle[0])-1 and isinstance(puzzle[r][c+1], int) and puzzle[r][c+1] >= 2:
+    if c < len(puzzle[0]) - 1 and isinstance(puzzle[r][c + 1], int) and puzzle[r][c + 1] >= 2:
         num_bulbs += 1
     return num_bulbs
 
@@ -99,7 +99,7 @@ def check_curr_state(puzzle, non_assigned_cells) -> bool:
     # if a cell can be a bulb or empty, mark it as 3
     for r in range(len(puzzle)):
         for c in range(len(puzzle[r])):
-            value = len(puzzle)*r + c
+            value = len(puzzle) * r + c
             if value in non_assigned_cells:
                 puzzle[r][c] = 3
 
@@ -203,13 +203,13 @@ def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic: st
 
 def count_adjacent_bulbs(puzzle: List[List[str]], r: int, c: int) -> int:
     num_bulbs = 0
-    if r > 0 and puzzle[r-1][c] == 'b':
+    if r > 0 and puzzle[r - 1][c] == 'b':
         num_bulbs += 1
-    if r < len(puzzle)-1 and puzzle[r+1][c] == 'b':
+    if r < len(puzzle) - 1 and puzzle[r + 1][c] == 'b':
         num_bulbs += 1
-    if c > 0 and puzzle[r][c-1] == 'b':
+    if c > 0 and puzzle[r][c - 1] == 'b':
         num_bulbs += 1
-    if c < len(puzzle[0])-1 and puzzle[r][c+1] == 'b':
+    if c < len(puzzle[0]) - 1 and puzzle[r][c + 1] == 'b':
         num_bulbs += 1
     return num_bulbs
 
@@ -224,7 +224,7 @@ def is_puzzle_solved(puzzle: List[List[str]]) -> bool:
     light_map_up(puzzle)
 
     print('\nBacktracking...')
-    print_puzzle(puzzle)
+    library.print_puzzle(puzzle)
     print("--------------")
     return is_map_lit_up_and_clean_map(puzzle)
 
@@ -234,8 +234,8 @@ def light_map_up(puzzle: List[List[str]]):
         for c in range(len(puzzle[0])):
             if puzzle[r][c] == 'b':
                 k = 1
-                while r - k >= 0 and (puzzle[r-k][c] == '_' or puzzle[r - k][c] == '*'):
-                    puzzle[r-k][c] = '*'
+                while r - k >= 0 and (puzzle[r - k][c] == '_' or puzzle[r - k][c] == '*'):
+                    puzzle[r - k][c] = '*'
                     k += 1
                 k = 1
                 while r + k < len(puzzle) and (puzzle[r + k][c] == '_' or puzzle[r + k][c] == '*'):
@@ -282,26 +282,26 @@ def num_cells_should_be_lit(puzzle: List[List[str]], r: int, c: int) -> int:
 
 def count_walls_around(puzzle: List[List[str]], r: int, c: int) -> int:
     num_walls = 0
-    if r > 0 and puzzle[r-1][c] in wall_values:
-        num_walls += int(int(puzzle[r-1][c])/2 + 1)
-    if r < len(puzzle)-1 and puzzle[r+1][c] in wall_values:
-        num_walls += int(int(puzzle[r+1][c])/2 + 1)
-    if c > 0 and puzzle[r][c-1] in wall_values:
-        num_walls += int(int(puzzle[r][c-1])/2 + 1)
-    if c < len(puzzle[0])-1 and puzzle[r][c+1] in wall_values:
-        num_walls += int(int(puzzle[r][c+1])/2 + 1)
+    if r > 0 and puzzle[r - 1][c] in wall_values:
+        num_walls += int(int(puzzle[r - 1][c]) / 2 + 1)
+    if r < len(puzzle) - 1 and puzzle[r + 1][c] in wall_values:
+        num_walls += int(int(puzzle[r + 1][c]) / 2 + 1)
+    if c > 0 and puzzle[r][c - 1] in wall_values:
+        num_walls += int(int(puzzle[r][c - 1]) / 2 + 1)
+    if c < len(puzzle[0]) - 1 and puzzle[r][c + 1] in wall_values:
+        num_walls += int(int(puzzle[r][c + 1]) / 2 + 1)
     return num_walls
 
 
 def count_adjacent_lit_cells(puzzle: List[List[str]], r, c) -> int:
     count = 0
-    if r > 0 and puzzle[r-1][c] == '*':
+    if r > 0 and puzzle[r - 1][c] == '*':
         count += 1
-    if r < len(puzzle)-1 and puzzle[r+1][c] == '*':
+    if r < len(puzzle) - 1 and puzzle[r + 1][c] == '*':
         count += 1
-    if c > 0 and puzzle[r][c-1] == '*':
+    if c > 0 and puzzle[r][c - 1] == '*':
         count += 1
-    if c < len(puzzle[0])-1 and puzzle[r][c+1] == '*':
+    if c < len(puzzle[0]) - 1 and puzzle[r][c + 1] == '*':
         count += 1
     if puzzle[r][c] == '*':
         count += 3
@@ -381,10 +381,7 @@ def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
 
 def place_must_have_bulbs(puzzle: List[List[str]], empty_cells: List[List[int]]) -> List[List[int]]:
     stop = False
-    count = 0
     while not stop:
-        count += 1
-        # stop = False
         new_bulb_placed = False
         for wall in library.valid_wall:
 
@@ -404,62 +401,19 @@ def place_must_have_bulbs(puzzle: List[List[str]], empty_cells: List[List[int]])
                     if puzzle[var[0]][var[1]] == '_':
                         puzzle[var[0]][var[1]] = 'b'
                         empty_cells.remove(var)
-                # stop = True
+
                 new_bulb_placed = True
                 light_map_up(puzzle)
         if not new_bulb_placed:
             stop = True
 
+    # remove already lit up cells from the list of potential cells to place a bulb
     variables = copy.deepcopy(empty_cells)
     for cell in variables:
         if puzzle[cell[0]][cell[1]] == '*':
             empty_cells.remove(cell)
-    print(count)
+
     return empty_cells
-
-
-# place bulbs in places that must be bulbs
-def pre_process(puzzle: List[List[str]], empty_cells: List[List[int]]):
-    # stop = False
-    # count = 0
-    # while not stop:
-    #     count += 1
-    #     # stop = False
-    #     new_bulb_placed = False
-    #     for wall in library.valid_wall:
-    #
-    #         sure_variable = library.generate_valid_neighbours(wall[0], wall[1], len(puzzle), puzzle)
-    #         count_bulbs = 0
-    #         count_empty_cells = 0
-    #         count_stars = 0
-    #         for var in sure_variable:
-    #             if puzzle[var[0]][var[1]] == 'b':
-    #                 count_bulbs += 1
-    #             elif puzzle[var[0]][var[1]] == '_':
-    #                 count_empty_cells += 1
-    #             elif puzzle[var[0]][var[1]] == '*':
-    #                 count_stars += 1
-    #         if count_empty_cells > 0 and count_empty_cells == int(puzzle[wall[0]][wall[1]]) - count_bulbs:
-    #             for var in sure_variable:
-    #                 if puzzle[var[0]][var[1]] == '_':
-    #                     puzzle[var[0]][var[1]] = 'b'
-    #                     empty_cells.remove(var)
-    #             # stop = True
-    #             new_bulb_placed = True
-    #             light_map_up(puzzle)
-    #     if not new_bulb_placed:
-    #         stop = True
-    #
-    # variables = copy.deepcopy(empty_cells)
-    # for cell in variables:
-    #     if puzzle[cell[0]][cell[1]] == '*':
-    #         empty_cells.remove(cell)
-    empty_cells = place_must_have_bulbs(puzzle, empty_cells)
-    remove_zero_wall_neighbours(puzzle, empty_cells)
-
-    print_puzzle(puzzle)
-    # print(count)
-    is_map_lit_up_and_clean_map(puzzle)
 
 
 def remove_zero_wall_neighbours(puzzle: List[List[str]], empty_cells: List[List[int]]):
@@ -467,29 +421,27 @@ def remove_zero_wall_neighbours(puzzle: List[List[str]], empty_cells: List[List[
     # remove all neighbours of a zero wall
     for x in range(len(library.invalid_wall)):
         invalid_neighbours.extend(library.generate_valid_neighbours(library.invalid_wall[x][0],
-                                                            library.invalid_wall[x][1], len(puzzle), puzzle))
+                                                                    library.invalid_wall[x][1], len(puzzle), puzzle))
     for x in range(len(invalid_neighbours)):
-        # for y in range(len(empty_cells)):
-        #     if empty_cells[y][1] == invalid_neighbours[x]:
         if invalid_neighbours[x] in empty_cells:
             empty_cells.remove(invalid_neighbours[x])
-                # break
+
+
+# place bulbs in places that must be bulbs
+def pre_process(puzzle: List[List[str]], empty_cells: List[List[int]]):
+    empty_cells = place_must_have_bulbs(puzzle, empty_cells)
+    remove_zero_wall_neighbours(puzzle, empty_cells)
+    # TODO: Remove this print line
+    library.print_puzzle(puzzle)
+    is_map_lit_up_and_clean_map(puzzle)
 
 
 def solve(puzzle: List[List[str]], heuristic: str):
     domain = ('b', '_')
     non_assigned = get_empty_cells(puzzle)
     pre_process(puzzle, non_assigned)
-    print("*****")
-    print(heuristic)
+    print("Chosen heuristic to solve the puzzle: {}.".format(heuristic))
     return forward_checking(puzzle, domain, non_assigned, heuristic)
-
-
-def print_puzzle(puzzle: List[List[str]]):
-    for r in range(len(puzzle)):
-        for c in range(len(puzzle[0])):
-            print(puzzle[r][c], end=' ')
-        print()
 
 
 def main(argv=None):
@@ -500,17 +452,16 @@ def main(argv=None):
 
     arguments = arg_parser.parse_args(argv)
 
-    # TODO: add different input reading methods and heuristic detection
     puzzle = library.read_puzzle()
-    # print(type(puzzle))
+
     starting_time = time.time()
     solution = solve(puzzle, arguments.heuristic)
     ending_time = time.time()
     if solution == 'Too many nodes. Timeout':
         print('Too many nodes. Timeout.\nIt took {} seconds.'.format(ending_time - starting_time))
     else:
-        print_puzzle(solution)
-        print('*** Done! ***')
+        print('*** Done! ***\nThe solution is printed out below:')
+        library.print_puzzle(solution)
         print("The puzzle was solved in {} seconds.".format(ending_time - starting_time))
     print('Visited {} nodes.'.format(num_nodes))
 

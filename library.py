@@ -1,3 +1,5 @@
+from typing import List
+
 stack = []
 variables = []
 invalid_wall = []
@@ -49,3 +51,10 @@ def generate_valid_neighbours(row, col, length, puzzle, bulb_inclusive=False):
             valid_neighbours.append([row, col + 1])
 
     return valid_neighbours
+
+
+def print_puzzle(puzzle: List[List[str]]):
+    for r in range(len(puzzle)):
+        for c in range(len(puzzle[0])):
+            print(puzzle[r][c], end=' ')
+        print()
