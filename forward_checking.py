@@ -491,6 +491,7 @@ def main(argv=None):
         print('Too many nodes. Timeout.\nIt took {} seconds.'.format(ending_time - starting_time))
     else:
         print_puzzle(solution)
+        print('*** Done! ***')
         print("The puzzle was solved in {} seconds.".format(ending_time - starting_time))
     print('Visited {} nodes.'.format(num_nodes))
 
