@@ -175,24 +175,18 @@ def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic: st
         return 'backtrack'
 
     chosen_cells, chosen_cell = [], []
-    # print("&&&&&&&" + heuristic)
     # check the input to see what heuristic should be used
     if heuristic == 'most_constrained':
-        # print('Using most constrained heuristic...')
         chosen_cells = find_most_constrained(puzzle, empty_cells)
-        # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
     elif heuristic == 'most_constraining':
-        # print('Using most constraining heuristic...')
         chosen_cells = find_most_constraining(puzzle, empty_cells)
-        # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
     elif heuristic == 'hybrid':
-        # print('Using hybrid heuristic...')
         chosen_cells = hybrid_heuristic(puzzle, empty_cells)
     else:
         print('Heuristic must be either "most_constrained", "most_constraining" or "hybrid"')
     if len(chosen_cells) >= 1:
         chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
-    # if len(chosen_cell) == 1:
+
     empty_cells.remove(chosen_cell)
 
     r, c = chosen_cell[0], chosen_cell[1]
@@ -229,7 +223,7 @@ def is_puzzle_solved(puzzle: List[List[str]]) -> bool:
 
     light_map_up(puzzle)
 
-    print('\nBacktracking!')
+    print('\nBacktracking...')
     print_puzzle(puzzle)
     print("--------------")
     return is_map_lit_up_and_clean_map(puzzle)
@@ -328,30 +322,23 @@ def is_map_lit_up_and_clean_map(puzzle: List[List[str]]) -> bool:
 
 def find_most_constrained(puzzle: List[List[str]], empty_cells: List[List[int]]):
     curr_most_constrained = (-1, [])
-    # curr_most_constrained = (-1, -1)
     light_map_up(puzzle)
 
     for cell in empty_cells:
-        # r = cell[0]
-        # c = cell[1]
-
         num_walls = count_walls_around(puzzle, cell[0], cell[1])
         # check to see if a cell is in an edge, or corner
         location = check_edge_corner(puzzle, cell[0], cell[1])
         adj_lit_cells = count_adjacent_lit_cells(puzzle, cell[0], cell[1])
 
         constraints = num_walls + location + adj_lit_cells
+
         # randomly pick one to pick if the constraints of this cell is the same as the current most constrained
-        # if constraints == curr_most_constrained[0] and random.randint(0, 1) == 0:
-        #     curr_most_constrained = (constraints, cell)
         if constraints == curr_most_constrained[0]:
             curr_most_constrained[1].append(cell)
         if constraints > curr_most_constrained[0]:
             curr_most_constrained = (constraints, [cell])
-            # curr_most_constrained = (constraints, cell)
 
     is_map_lit_up_and_clean_map(puzzle)
-    # return curr_most_constrained[1][random.randint(0, len(curr_most_constrained[1])-1)]
     return curr_most_constrained[1]
 
 
@@ -369,20 +356,16 @@ def find_most_constraining(puzzle: List[List[str]], empty_cells: List[List[int]]
         elif to_be_lit_up == max_count:
             cells.append(cell)
     is_map_lit_up_and_clean_map(puzzle)
-    # return cells[random.randint(0, len(cells)-1)]
     return cells
 
 
 # this is a combination of most constrained and most constraining heuristics, with most constraining heuristic acts as a
 # tie breaker for most constrained heuristic.
 def hybrid_heuristic(puzzle: List[List[str]], empty_cells: List[List[int]]):
-    # light_map_up(puzzle)
     chosen_cells = find_most_constrained(puzzle, empty_cells)
-    # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
-    # empty_cells.remove(chosen_cell)
+    # when there is a tie between multiple empty cells
     if len(chosen_cells) > 1:
         chosen_cells = find_most_constraining(puzzle, chosen_cells)
-    # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
     is_map_lit_up_and_clean_map(puzzle)
     return chosen_cells
 
@@ -513,7 +496,6 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     arg_parser = argparse.ArgumentParser()
-    # arg_parser.add_argument('--input', action='store', dest='input', type=str, default='')
     arg_parser.add_argument('--heuristic', action='store', dest='heuristic', type=str, default='most_constrained')
 
     arguments = arg_parser.parse_args(argv)
