@@ -172,7 +172,7 @@ def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic: st
     if is_puzzle_solved(puzzle):
         return puzzle
     if len(empty_cells) == 0 and check_curr_state(puzzle, empty_cells):
-        return 'back'
+        return 'backtrack'
 
     chosen_cells, chosen_cell = [], []
     # print("&&&&&&&" + heuristic)
@@ -200,11 +200,11 @@ def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic: st
         puzzle[r][c] = val
         if (val != '_' and can_bulb_be_here(puzzle, r, c)) or val == '_':
             result = forward_checking(puzzle, domain, empty_cells, heuristic)
-            if result != 'back':
+            if result != 'backtrack':
                 return result
 
     empty_cells.append(chosen_cell)
-    return 'back'
+    return 'backtrack'
 
 
 def count_adjacent_bulbs(puzzle: List[List[str]], r: int, c: int) -> int:
@@ -332,13 +332,13 @@ def find_most_constrained(puzzle: List[List[str]], empty_cells: List[List[int]])
     light_map_up(puzzle)
 
     for cell in empty_cells:
-        r = cell[0]
-        c = cell[1]
+        # r = cell[0]
+        # c = cell[1]
 
-        num_walls = count_walls_around(puzzle, r, c)
+        num_walls = count_walls_around(puzzle, cell[0], cell[1])
         # check to see if a cell is in an edge, or corner
-        location = check_edge_corner(puzzle, r, c)
-        adj_lit_cells = count_adjacent_lit_cells(puzzle, r, c)
+        location = check_edge_corner(puzzle, cell[0], cell[1])
+        adj_lit_cells = count_adjacent_lit_cells(puzzle, cell[0], cell[1])
 
         constraints = num_walls + location + adj_lit_cells
         # randomly pick one to pick if the constraints of this cell is the same as the current most constrained
@@ -362,9 +362,7 @@ def find_most_constraining(puzzle: List[List[str]], empty_cells: List[List[int]]
     light_map_up(puzzle)
 
     for cell in empty_cells:
-        r = cell[0]
-        c = cell[1]
-        to_be_lit_up = num_cells_should_be_lit(puzzle, r, c)
+        to_be_lit_up = num_cells_should_be_lit(puzzle, cell[0], cell[1])
         if to_be_lit_up > max_count:
             cells = [cell]
             max_count = to_be_lit_up
@@ -378,12 +376,12 @@ def find_most_constraining(puzzle: List[List[str]], empty_cells: List[List[int]]
 # this is a combination of most constrained and most constraining heuristics, with most constraining heuristic acts as a
 # tie breaker for most constrained heuristic.
 def hybrid_heuristic(puzzle: List[List[str]], empty_cells: List[List[int]]):
-    light_map_up(puzzle)
+    # light_map_up(puzzle)
     chosen_cells = find_most_constrained(puzzle, empty_cells)
     # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
     # empty_cells.remove(chosen_cell)
     if len(chosen_cells) > 1:
-        chosen_cells = find_most_constraining(puzzle, empty_cells)
+        chosen_cells = find_most_constraining(puzzle, chosen_cells)
     # chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
     is_map_lit_up_and_clean_map(puzzle)
     return chosen_cells
@@ -398,8 +396,7 @@ def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
     return empty_cells
 
 
-# place bulbs in places that must be bulbs
-def pre_process(puzzle: List[List[str]], empty_cells: List[List[int]]):
+def place_must_have_bulbs(puzzle: List[List[str]], empty_cells: List[List[int]]) -> List[List[int]]:
     stop = False
     count = 0
     while not stop:
@@ -434,11 +431,51 @@ def pre_process(puzzle: List[List[str]], empty_cells: List[List[int]]):
     for cell in variables:
         if puzzle[cell[0]][cell[1]] == '*':
             empty_cells.remove(cell)
+    print(count)
+    return empty_cells
 
+
+# place bulbs in places that must be bulbs
+def pre_process(puzzle: List[List[str]], empty_cells: List[List[int]]):
+    # stop = False
+    # count = 0
+    # while not stop:
+    #     count += 1
+    #     # stop = False
+    #     new_bulb_placed = False
+    #     for wall in library.valid_wall:
+    #
+    #         sure_variable = library.generate_valid_neighbours(wall[0], wall[1], len(puzzle), puzzle)
+    #         count_bulbs = 0
+    #         count_empty_cells = 0
+    #         count_stars = 0
+    #         for var in sure_variable:
+    #             if puzzle[var[0]][var[1]] == 'b':
+    #                 count_bulbs += 1
+    #             elif puzzle[var[0]][var[1]] == '_':
+    #                 count_empty_cells += 1
+    #             elif puzzle[var[0]][var[1]] == '*':
+    #                 count_stars += 1
+    #         if count_empty_cells > 0 and count_empty_cells == int(puzzle[wall[0]][wall[1]]) - count_bulbs:
+    #             for var in sure_variable:
+    #                 if puzzle[var[0]][var[1]] == '_':
+    #                     puzzle[var[0]][var[1]] = 'b'
+    #                     empty_cells.remove(var)
+    #             # stop = True
+    #             new_bulb_placed = True
+    #             light_map_up(puzzle)
+    #     if not new_bulb_placed:
+    #         stop = True
+    #
+    # variables = copy.deepcopy(empty_cells)
+    # for cell in variables:
+    #     if puzzle[cell[0]][cell[1]] == '*':
+    #         empty_cells.remove(cell)
+    empty_cells = place_must_have_bulbs(puzzle, empty_cells)
     remove_zero_wall_neighbours(puzzle, empty_cells)
 
     print_puzzle(puzzle)
-    print(count)
+    # print(count)
     is_map_lit_up_and_clean_map(puzzle)
 
 
