@@ -2,12 +2,15 @@ import argparse
 import random
 import sys
 import time
+import library
 
 stack = []
-variables = []
-invalid_wall = []
-valid_wall = []
+variables = library.variables
+invalid_wall = library.invalid_wall
+valid_wall = library.valid_wall
 already_placed = []
+main_puzzle = []
+num_nodes = 0
 
 
 # Prioritize empty position where walls are valid neighbours
@@ -16,7 +19,7 @@ def prioritize_by_wall_neighbours(puzzle):
         x[0] = 0
 
     for x in range(len(valid_wall)):
-        valid_neighbours = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
+        valid_neighbours = library.generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
         # if the wall is not completed all the neighbour around it would be prioritized
         if int(puzzle[valid_wall[x][0]][valid_wall[x][1]]) != count_bulbs(puzzle, valid_wall[x]):
             for z in range(len(valid_neighbours)):
@@ -37,8 +40,8 @@ def prioritize_by_wall_neighbours(puzzle):
 def remove_zero_wall_neighbours(puzzle):
     invalid_neighbours = []
     for x in range(len(invalid_wall)):
-        invalid_neighbours.extend(generate_valid_neighbours(invalid_wall[x][0],
-                                                            invalid_wall[x][1], len(puzzle), puzzle))
+        invalid_neighbours.extend(library.generate_valid_neighbours(invalid_wall[x][0],
+                                                                    invalid_wall[x][1], len(puzzle), puzzle))
     for x in range(len(invalid_neighbours)):
         for y in range(len(variables)):
             if variables[y][1] == invalid_neighbours[x]:
@@ -48,7 +51,7 @@ def remove_zero_wall_neighbours(puzzle):
 
 def count_bulbs(puzzle, wall):
     counter = 0
-    sure_variable = generate_valid_neighbours(wall[0], wall[1], len(puzzle), puzzle)
+    sure_variable = library.generate_valid_neighbours(wall[0], wall[1], len(puzzle), puzzle)
     for x in sure_variable:
         if puzzle[x[0]][x[1]] == "b":
             counter += 1
@@ -64,9 +67,9 @@ def place_sure_bulbs(puzzle):
 
             value = puzzle[valid_wall[x][0]][valid_wall[x][1]]
             if count == 0:
-                sure_variable = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
+                sure_variable = library.generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
             else:
-                sure_variable = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle, True)
+                sure_variable = library.generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle, True)
             add = True
             counter = count_bulbs(puzzle, valid_wall[x])
             if count > 0 and counter == int(value):
@@ -103,7 +106,7 @@ def remove_completed_wall(puzzle):
     for x in range(len(valid_wall)):
         if count_bulbs(puzzle, valid_wall[x]) == int(puzzle[valid_wall[x][0]][valid_wall[x][1]]):
             completed_walls.append(valid_wall[x])
-            valid_neighbours_a = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
+            valid_neighbours_a = library.generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
             for var in valid_neighbours_a:
                 for cells in variables:
                     if cells[1] == var:
@@ -137,12 +140,17 @@ def is_lit_up(puzzle):
 
 
 def backtrack():
+    print('\rProcessing...', end='')
     stack.append(([-1, -1], variables, 0, already_placed))
     global num_nodes
     num_nodes = 1
     while len(stack) != 0:
         curr = stack.pop()
         num_nodes += 1
+        if num_nodes % 10000 == 0:
+            print('\rAlready processed {} nodes.'.format(num_nodes), end='')
+        if num_nodes == 5000000:
+            return 'Too many nodes. Timeout!'
         if curr[0] != [-1, -1]:
             puzzle = place_bulbs(curr[3], curr[0][1], "b", "_", "*")
             is_valid_row_col = valid_rows_and_cols(curr[0][1][0], curr[0][1][1], puzzle)
@@ -256,35 +264,10 @@ def num_cells_lit(curr, new):
     return num_lit
 
 
-# This function reads in the puzzle from the text file
-def read_puzzle():
-    txt_file = open('Puzzles.txt')
-    txt_file.readline()
-    dimension = txt_file.readline().split()
-    row = int(dimension[0])
-
-    puzzle = [[0 for x in range(row)] for y in range(row)]
-
-    for x in range(row):
-        for y in range(row+1):
-            curr = txt_file.read(1)
-            if curr != '\n':
-                puzzle[x][y] = curr
-            if curr == "_":
-                variables.append([0, [x, y]])
-            if curr.isdigit():
-                if curr == "0":
-                    invalid_wall.append([x, y])
-                else:
-                    valid_wall.append([x, y])
-
-    return puzzle
-
-
 def validate_bulbs_next_to_wall(puzzle):
     for x in range(len(valid_wall)):
         num_of_bulbs = int(puzzle[valid_wall[x][0]][valid_wall[x][1]])
-        valid_neighbour = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
+        valid_neighbour = library.generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
         seen_bulbs = 0
         for z in range(len(valid_neighbour)):
             if puzzle[valid_neighbour[z][0]][valid_neighbour[z][1]] == "b":
@@ -297,7 +280,7 @@ def validate_bulbs_next_to_wall(puzzle):
 def valid_bulbs_next_to_wall(puzzle):
     for x in range(len(valid_wall)):
         num_of_bulbs = int(puzzle[valid_wall[x][0]][valid_wall[x][1]])
-        valid_neighbour = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
+        valid_neighbour = library.generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
         seen_bulbs = 0
         for z in range(len(valid_neighbour)):
             if puzzle[valid_neighbour[z][0]][valid_neighbour[z][1]] == "b":
@@ -339,29 +322,6 @@ def valid_rows_and_cols(row, col, puzzle):
     return True
 
 
-def generate_valid_neighbours(row, col, length, puzzle, bulb_inclusive=False):
-    valid_neighbours = []
-
-    if row > 0:
-        if not puzzle[row-1][col].isdigit() and not (bulb_inclusive and (puzzle[row-1][col] == "b" or puzzle[row-1][col]
-                                                                         == "*")):
-            valid_neighbours.append([row - 1, col])
-    if row < length-1:
-        if not puzzle[row+1][col].isdigit() and not (bulb_inclusive and (puzzle[row+1][col] == "b" or puzzle[row+1][col]
-                                                                         == "*")):
-            valid_neighbours.append([row + 1, col])
-    if col > 0:
-        if not puzzle[row][col-1].isdigit() and not (bulb_inclusive and (puzzle[row][col-1] == "b" or puzzle[row][col-1]
-                                                                         == "*")):
-            valid_neighbours.append([row, col - 1])
-    if col < length-1:
-        if not puzzle[row][col+1].isdigit() and not (bulb_inclusive and (puzzle[row][col+1] == "b" or puzzle[row][col+1]
-                                                                         == "*")):
-            valid_neighbours.append([row, col + 1])
-
-    return valid_neighbours
-
-
 def count_adjacent_lit_cells(puzzle, r, c) -> int:
     count = 0
     if r > 0 and (puzzle[r-1][c] == '*' or puzzle[r-1][c] == 'b'):
@@ -376,13 +336,6 @@ def count_adjacent_lit_cells(puzzle, r, c) -> int:
         count += 2
 
     return count
-
-
-def print_puzzle(puzzle):
-    for x in range(len(puzzle)):
-        for y in range(len(puzzle)):
-            print(puzzle[x][y], end=' ')
-        print()
 
 
 def find_most_constrained(puzzle, child_possible_variables):
@@ -427,7 +380,7 @@ def find_most_constraining(puzzle, child_possible_variables):
         constraints += num_lit
         cell[0] = constraints
     for wall in valid_wall:
-        possible_position = generate_valid_neighbours(wall[0], wall[1], len(puzzle), puzzle, True)
+        possible_position = library.generate_valid_neighbours(wall[0], wall[1], len(puzzle), puzzle, True)
         if int(puzzle[wall[0]][wall[1]]) > count_bulbs(puzzle, wall):
             for poss in possible_position:
                 for cell in child_possible_variables:
@@ -478,9 +431,6 @@ def hybrid(puzzle, child_possible_variables):
     child_possible_variables[-1 + chosen] = item_1
 
 
-main_puzzle = []
-
-
 def main(argv=None):
     global main_puzzle
     if argv is None:
@@ -490,17 +440,21 @@ def main(argv=None):
 
     arguments = arg_parser.parse_args(argv)
     global heuristic
-    heuristic= arguments.heuristic
-    main_puzzle = read_puzzle()
+    heuristic = arguments.heuristic
+    main_puzzle = library.read_puzzle()
 
     if not prioritize_variables(main_puzzle):
         starting_time = time.time()
-        print_puzzle(backtrack())
+        result = backtrack()
+        library.print_puzzle(result)
         ending_time = time.time()
-        print("The program was run for {} seconds.".format(ending_time - starting_time))
-        print(num_nodes)
+        if result == 'Too many nodes. Timeout!':
+            print('Too many nodes. Timeout!\nIt took {} seconds.'.format(ending_time - starting_time))
+        else:
+            print("The program was run for {} seconds.".format(ending_time - starting_time))
+        print("Processed {} nodes".format(num_nodes))
     else:
-        print_puzzle(main_puzzle)
+        library.print_puzzle(main_puzzle)
 
 
 if __name__ == '__main__':

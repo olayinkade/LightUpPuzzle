@@ -261,7 +261,7 @@ def count_adjacent_lit_cells(puzzle: List[List[str]], r, c) -> int:
         count += 1
     if c < len(puzzle[0]) - 1 and puzzle[r][c + 1] == '*':
         count += 1
-    if puzzle[r][c] == '*': # if it itself is lit up
+    if puzzle[r][c] == '*':  # if it itself is lit up
         count += 3
     return count
 
@@ -349,8 +349,8 @@ def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic: st
             print('\rProcessing...', end='')
     if num_nodes % 10000 == 0:
         print('\rAlready processed {} nodes.'.format(num_nodes), end='')
-    if num_nodes == 3000000:
-        return 'Too many nodes. Timeout'
+    if num_nodes == 5000000:
+        return 'Too many nodes. Timeout!'
     if validate_wall_condition(puzzle):
         return puzzle
     # backtrack if this cannot be part of a valid solution
@@ -366,7 +366,8 @@ def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic: st
     elif heuristic == 'hybrid':
         chosen_cells = hybrid_heuristic(puzzle, empty_cells)
     else:
-        print('Heuristic must be either "most_constrained", "most_constraining" or "hybrid"')
+        print('\n*** ERROR *** Heuristic must be either "most_constrained", "most_constraining" or "hybrid".')
+        return 'stop'
     if len(chosen_cells) >= 1:
         chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
 
@@ -449,7 +450,7 @@ def remove_zero_wall_neighbours(puzzle: List[List[str]], empty_cells: List[List[
             empty_cells.remove(invalid_neighbours[x])
 
 
-# do some preprocessing to decrease the number of variables to be considered
+# do some pre-processing to decrease the number of variables to be considered
 def pre_process(puzzle: List[List[str]], empty_cells: List[List[int]]):
     empty_cells = place_must_have_bulbs(puzzle, empty_cells)
     remove_zero_wall_neighbours(puzzle, empty_cells)
@@ -481,8 +482,10 @@ def main(argv=None):
     starting_time = time.time()
     solution = solve(puzzle, arguments.heuristic)
     ending_time = time.time()
-    if solution == 'Too many nodes. Timeout':
+    if solution == 'Too many nodes. Timeout!':
         print('Too many nodes. Timeout.\nIt took {} seconds.'.format(ending_time - starting_time))
+    elif solution == 'stop':
+        print('Please retry!')
     else:
         print('*** Done! ***\nThe solution is printed out below:')
         library.print_puzzle(solution)
