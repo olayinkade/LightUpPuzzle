@@ -33,11 +33,11 @@ For 10x10 map:
 For 12x12 map:
 -------------
 * Backtracking with most constrained heuristic: 0.04202032089 secs; 11 nodes
-* Backtracking with most constraining heuristic: 0.02690871557 secs; 8 nodes
+* Backtracking with most constraining heuristic: 0.02690871557 secs; 11 nodes
 * Backtracking with hybrid heuristic: 0.06855805715 secs; 23 nodes
 
 * Forward checking with most constrained heuristic: 0.006344954173 secs; 9 nodes
-* Forward checking with most constraining heuristic: 0.01059150696 secs; 21 nodes
+* Forward checking with most constraining heuristic: 0.01059150696 secs; 17 nodes
 * Forward checking with hybrid heuristic: 0.007397731145 secs; 9 nodes
 
 For 14x14 map:
