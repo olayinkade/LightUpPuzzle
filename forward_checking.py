@@ -2,7 +2,6 @@ import argparse
 import sys
 from typing import List
 import random
-# import light_up_puzzle
 import library
 import time
 import copy
@@ -11,6 +10,8 @@ wall_values = {'0', '1', '2', '3', '4'}
 num_nodes = 0
 
 
+# check if a cell is in a special place, such as on the edge or in the corner
+# assign different status/priority values for further processing later
 def check_edge_corner(puzzle: List[List[str]], r: int, c: int) -> int:
     status = 0
     if r == 0 or r == len(puzzle) - 1:  # edge
@@ -18,20 +19,6 @@ def check_edge_corner(puzzle: List[List[str]], r: int, c: int) -> int:
     if c == 0 or c == len(puzzle[0]) - 1:  # edge, status = 2 if it's a corner
         status += 1
     return status
-
-
-def get_total_potential_adjacent(puzzle, r: int, c: int) -> int:
-    rows, cols, count = len(puzzle), len(puzzle[0]), 0
-
-    if r > 0 and isinstance(puzzle[r - 1][c], int) and puzzle[r - 1][c] >= 2:
-        count += 1
-    if r < rows - 1 and isinstance(puzzle[r + 1][c], int) and puzzle[r + 1][c] >= 2:
-        count += 1
-    if c > 0 and isinstance(puzzle[r][c - 1], int) and puzzle[r][c - 1] >= 2:
-        count += 1
-    if c < cols - 1 and isinstance(puzzle[r][c + 1], int) and puzzle[r][c + 1] >= 2:
-        count += 1
-    return count
 
 
 def prioritize_bulbs(puzzle, r: int, c: int):
@@ -82,8 +69,11 @@ def prioritize_walls(puzzle, r, c):
             prioritize_bulbs(puzzle, r, moving_c)
 
 
+# check to see among all adjacent cells, how many are potential places for bulbs,
+# >=2 as empty with priority 2 can be bulbs
 def generate_potential_bulbs_to_wall(puzzle, r: int, c: int) -> int:
     num_bulbs = 0
+    # check all for neighbours
     if r > 0 and isinstance(puzzle[r - 1][c], int) and puzzle[r - 1][c] >= 2:
         num_bulbs += 1
     if r < len(puzzle) - 1 and isinstance(puzzle[r + 1][c], int) and puzzle[r + 1][c] >= 2:
@@ -95,27 +85,29 @@ def generate_potential_bulbs_to_wall(puzzle, r: int, c: int) -> int:
     return num_bulbs
 
 
+# check the status of the current "solution", or node, to see if it could be on the path to the solution,
+# return False if it cannot be possibly part of a solution
 def check_curr_state(puzzle, non_assigned_cells) -> bool:
-    # if a cell can be a bulb or empty, mark it as 3
+    # if a cell can be a bulb or empty, its priority is 3
     for r in range(len(puzzle)):
         for c in range(len(puzzle[r])):
             value = len(puzzle) * r + c
             if value in non_assigned_cells:
                 puzzle[r][c] = 3
 
-    # if a cell cannot be a bulb, mark it as 1.
+    # if a cell cannot be a bulb, its priority is 1.
     for r in range(len(puzzle)):
         for c in range(len(puzzle[r])):
             if puzzle[r][c] == 'b':
                 prioritize_bulbs(puzzle, r, c)
 
-    # if a cell cannot be empty but can be a bulb, mark it as 2, mark it as 0 if it can't be neither
+    # if a cell cannot be empty but can be a bulb, assign 2 as its priority,
+    # priority 0 if it can't be neither
     for r in range(len(puzzle)):
         for c in range(len(puzzle[r])):
             if puzzle[r][c] in wall_values:
                 num_adj_bulbs = count_adjacent_bulbs(puzzle, r, c)
                 potential_bulbs = generate_potential_bulbs_to_wall(puzzle, r, c)
-
                 cell_status = check_edge_corner(puzzle, r, c)
 
                 require_bulbs = int(puzzle[r][c]) - num_adj_bulbs - cell_status
@@ -132,10 +124,12 @@ def check_curr_state(puzzle, non_assigned_cells) -> bool:
     return result
 
 
+# check if a given cell is inside the map
 def is_inside(puzzle: List[List[str]], r: int, c: int) -> bool:
     return 0 <= r < len(puzzle) and 0 <= c < len(puzzle[0])
 
 
+# given a cell, check if we can place a bulb there
 def can_bulb_be_here(puzzle: List[List[str]], r: int, c: int) -> bool:
     delta_r = [-1, 1, 0, 0]
     delta_c = [0, 0, -1, 1]
@@ -144,6 +138,7 @@ def can_bulb_be_here(puzzle: List[List[str]], r: int, c: int) -> bool:
         moving_c = c + delta_c[i]
 
         if is_inside(puzzle, moving_r, moving_c) and puzzle[moving_r][moving_c] in wall_values:
+            # if there is already enough number of bulbs for that well
             if count_adjacent_bulbs(puzzle, moving_r, moving_c) > int(puzzle[moving_r][moving_c]):
                 return False
 
@@ -155,52 +150,7 @@ def can_bulb_be_here(puzzle: List[List[str]], r: int, c: int) -> bool:
     return True
 
 
-def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic: str):
-    global num_nodes
-    num_nodes += 1
-    if num_nodes < 10000:
-        if num_nodes % 3 == 0:
-            print('\rProcessing.', end='')
-        if num_nodes % 3 == 1:
-            print('\rProcessing..', end='')
-        if num_nodes % 3 == 2:
-            print('\rProcessing...', end='')
-    if num_nodes % 10000 == 0:
-        print('\rAlready processed {} nodes.'.format(num_nodes), end='')
-    if num_nodes == 5000000:
-        return 'Too many nodes. Timeout'
-    if is_puzzle_solved(puzzle):
-        return puzzle
-    if len(empty_cells) == 0 and check_curr_state(puzzle, empty_cells):
-        return 'backtrack'
-
-    chosen_cells, chosen_cell = [], []
-    # check the input to see what heuristic should be used
-    if heuristic == 'most_constrained':
-        chosen_cells = find_most_constrained(puzzle, empty_cells)
-    elif heuristic == 'most_constraining':
-        chosen_cells = find_most_constraining(puzzle, empty_cells)
-    elif heuristic == 'hybrid':
-        chosen_cells = hybrid_heuristic(puzzle, empty_cells)
-    else:
-        print('Heuristic must be either "most_constrained", "most_constraining" or "hybrid"')
-    if len(chosen_cells) >= 1:
-        chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
-
-    empty_cells.remove(chosen_cell)
-
-    r, c = chosen_cell[0], chosen_cell[1]
-    for val in domain:
-        puzzle[r][c] = val
-        if (val != '_' and can_bulb_be_here(puzzle, r, c)) or val == '_':
-            result = forward_checking(puzzle, domain, empty_cells, heuristic)
-            if result != 'backtrack':
-                return result
-
-    empty_cells.append(chosen_cell)
-    return 'backtrack'
-
-
+# count the number of neighbouring bulbs surrounding a cell
 def count_adjacent_bulbs(puzzle: List[List[str]], r: int, c: int) -> int:
     num_bulbs = 0
     if r > 0 and puzzle[r - 1][c] == 'b':
@@ -214,8 +164,32 @@ def count_adjacent_bulbs(puzzle: List[List[str]], r: int, c: int) -> int:
     return num_bulbs
 
 
+# given a map with newly placed bulbs, light up every corresponding cell in the same row and column with * symbol
+def light_map_up(puzzle: List[List[str]]):
+    for r in range(len(puzzle)):
+        for c in range(len(puzzle[0])):
+            if puzzle[r][c] == 'b':
+                # loop through all cells in the same row and column with the current bulb
+                dist = 1
+                while r - dist >= 0 and (puzzle[r - dist][c] == '_' or puzzle[r - dist][c] == '*'):
+                    puzzle[r - dist][c] = '*'
+                    dist += 1
+                dist = 1
+                while r + dist < len(puzzle) and (puzzle[r + dist][c] == '_' or puzzle[r + dist][c] == '*'):
+                    puzzle[r + dist][c] = '*'
+                    dist += 1
+                dist = 1
+                while c - dist >= 0 and (puzzle[r][c - dist] == '_' or puzzle[r][c - dist] == '*'):
+                    puzzle[r][c - dist] = '*'
+                    dist += 1
+                dist = 1
+                while c + dist < len(puzzle[r]) and (puzzle[r][c + dist] == '_' or puzzle[r][c + dist] == '*'):
+                    puzzle[r][c + dist] = '*'
+                    dist += 1
+
+
 # check if the current solution is valid
-def is_puzzle_solved(puzzle: List[List[str]]) -> bool:
+def validate_wall_condition(puzzle: List[List[str]]) -> bool:
     for r in range(len(puzzle)):
         for c in range(len(puzzle[r])):
             if puzzle[r][c] in wall_values and int(puzzle[r][c]) != count_adjacent_bulbs(puzzle, r, c):
@@ -223,38 +197,17 @@ def is_puzzle_solved(puzzle: List[List[str]]) -> bool:
 
     light_map_up(puzzle)
 
-    print('\nBacktracking...')
     library.print_puzzle(puzzle)
     print("--------------")
     return is_map_lit_up_and_clean_map(puzzle)
 
 
-def light_map_up(puzzle: List[List[str]]):
-    for r in range(len(puzzle)):
-        for c in range(len(puzzle[0])):
-            if puzzle[r][c] == 'b':
-                k = 1
-                while r - k >= 0 and (puzzle[r - k][c] == '_' or puzzle[r - k][c] == '*'):
-                    puzzle[r - k][c] = '*'
-                    k += 1
-                k = 1
-                while r + k < len(puzzle) and (puzzle[r + k][c] == '_' or puzzle[r + k][c] == '*'):
-                    puzzle[r + k][c] = '*'
-                    k += 1
-                k = 1
-                while c - k >= 0 and (puzzle[r][c - k] == '_' or puzzle[r][c - k] == '*'):
-                    puzzle[r][c - k] = '*'
-                    k += 1
-                k = 1
-                while c + k < len(puzzle[r]) and (puzzle[r][c + k] == '_' or puzzle[r][c + k] == '*'):
-                    puzzle[r][c + k] = '*'
-                    k += 1
-
-
 # given a bulb position, count the number of cells should be lit up in the corresponding row and column
+# return the number of cells that would be lit up
 def num_cells_should_be_lit(puzzle: List[List[str]], r: int, c: int) -> int:
     num_cells = 0
     row_up = r - 1
+    # loop through all four directions
     while row_up >= 0 and (puzzle[row_up][c] == '_' or puzzle[row_up][c] == '*'):
         if puzzle[row_up][c] == '_':
             num_cells += 1
@@ -277,9 +230,13 @@ def num_cells_should_be_lit(puzzle: List[List[str]], r: int, c: int) -> int:
         if puzzle[r][col_right] == '_':
             num_cells += 1
         col_right += 1
+
     return num_cells
 
 
+# count number of walls around a cell, this plays an important role in the constraint of a cell (variable).
+# if its neighbouring wall is 3 or 4, there is a higher chance that it has to be a bulb than if its neighbouring
+# wall is a 0, 1 or 2.
 def count_walls_around(puzzle: List[List[str]], r: int, c: int) -> int:
     num_walls = 0
     if r > 0 and puzzle[r - 1][c] in wall_values:
@@ -293,6 +250,7 @@ def count_walls_around(puzzle: List[List[str]], r: int, c: int) -> int:
     return num_walls
 
 
+# count the number of lit up cells out of its 4 neighbours.
 def count_adjacent_lit_cells(puzzle: List[List[str]], r, c) -> int:
     count = 0
     if r > 0 and puzzle[r - 1][c] == '*':
@@ -303,11 +261,13 @@ def count_adjacent_lit_cells(puzzle: List[List[str]], r, c) -> int:
         count += 1
     if c < len(puzzle[0]) - 1 and puzzle[r][c + 1] == '*':
         count += 1
-    if puzzle[r][c] == '*':
+    if puzzle[r][c] == '*': # if it itself is lit up
         count += 3
     return count
 
 
+# check if the map is completely lit up, if not then the solution is not complete, return False
+# clean the map (remove star symbol) to be printed out.
 def is_map_lit_up_and_clean_map(puzzle: List[List[str]]) -> bool:
     lit_up = True
     for r in range(len(puzzle)):
@@ -320,6 +280,9 @@ def is_map_lit_up_and_clean_map(puzzle: List[List[str]]) -> bool:
     return lit_up
 
 
+# choose (a) cell(s) to place a bulb, based on most constrained heuristic
+# criteria for constraints: number of walls surrounding the cell, its location (if it's in the middle or on the
+# edge/corner, and if its neighbours are lit up.
 def find_most_constrained(puzzle: List[List[str]], empty_cells: List[List[int]]):
     curr_most_constrained = (-1, [])
     light_map_up(puzzle)
@@ -332,7 +295,7 @@ def find_most_constrained(puzzle: List[List[str]], empty_cells: List[List[int]])
 
         constraints = num_walls + location + adj_lit_cells
 
-        # randomly pick one to pick if the constraints of this cell is the same as the current most constrained
+        # add current cells to the list if the constraints of this cell is the same as the current most constrained
         if constraints == curr_most_constrained[0]:
             curr_most_constrained[1].append(cell)
         if constraints > curr_most_constrained[0]:
@@ -342,6 +305,8 @@ def find_most_constrained(puzzle: List[List[str]], empty_cells: List[List[int]])
     return curr_most_constrained[1]
 
 
+# choose (a) cell(s) to place a bulb, based on most constraining heuristic
+# criterion: number of cells would be lit up if we placed a bulb in a certain cell.
 def find_most_constraining(puzzle: List[List[str]], empty_cells: List[List[int]]):
     cells = []
     max_count = 0
@@ -370,6 +335,57 @@ def hybrid_heuristic(puzzle: List[List[str]], empty_cells: List[List[int]]):
     return chosen_cells
 
 
+# forward checking algorithm, with corresponding heuristic
+def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic: str):
+    global num_nodes
+    num_nodes += 1
+    # printing solving status
+    if num_nodes < 10000:
+        if num_nodes % 3 == 0:
+            print('\rProcessing.', end='')
+        if num_nodes % 3 == 1:
+            print('\rProcessing..', end='')
+        if num_nodes % 3 == 2:
+            print('\rProcessing...', end='')
+    if num_nodes % 10000 == 0:
+        print('\rAlready processed {} nodes.'.format(num_nodes), end='')
+    if num_nodes == 5000000:
+        return 'Too many nodes. Timeout'
+    if validate_wall_condition(puzzle):
+        return puzzle
+    # backtrack if this cannot be part of a valid solution
+    if len(empty_cells) == 0 and check_curr_state(puzzle, empty_cells):
+        return 'backtrack'
+
+    chosen_cells, chosen_cell = [], []
+    # check the input to see what heuristic should be used
+    if heuristic == 'most_constrained':
+        chosen_cells = find_most_constrained(puzzle, empty_cells)
+    elif heuristic == 'most_constraining':
+        chosen_cells = find_most_constraining(puzzle, empty_cells)
+    elif heuristic == 'hybrid':
+        chosen_cells = hybrid_heuristic(puzzle, empty_cells)
+    else:
+        print('Heuristic must be either "most_constrained", "most_constraining" or "hybrid"')
+    if len(chosen_cells) >= 1:
+        chosen_cell = chosen_cells[random.randint(0, len(chosen_cells) - 1)]
+
+    # remove the chosen cell from the list of potential bulb cells later
+    empty_cells.remove(chosen_cell)
+
+    r, c = chosen_cell[0], chosen_cell[1]
+    for val in domain:
+        puzzle[r][c] = val
+        if (val != '_' and can_bulb_be_here(puzzle, r, c)) or val == '_':
+            result = forward_checking(puzzle, domain, empty_cells, heuristic)
+            if result != 'backtrack':
+                return result
+
+    empty_cells.append(chosen_cell)
+    return 'backtrack'
+
+
+# get all the empty cells in the map, which are potential places for bulbs.
 def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
     empty_cells = []
     for r in range(len(puzzle)):
@@ -379,6 +395,9 @@ def get_empty_cells(puzzle: List[List[str]]) -> List[List[int]]:
     return empty_cells
 
 
+# some places in the map are certain to be bulbs because of some constraints, for example neighbours of a wall 4 have to
+# bulbs, neighbours of wall 3 in the edge, neighbours of wall 2 in the corner, or the amount of empty neighbours of a
+# wall is exactly the same as its number.
 def place_must_have_bulbs(puzzle: List[List[str]], empty_cells: List[List[int]]) -> List[List[int]]:
     stop = False
     while not stop:
@@ -396,6 +415,7 @@ def place_must_have_bulbs(puzzle: List[List[str]], empty_cells: List[List[int]])
                     count_empty_cells += 1
                 elif puzzle[var[0]][var[1]] == '*':
                     count_stars += 1
+            # if the amount of empty neighbours of a wall is exactly the same as its number, place bulbs
             if count_empty_cells > 0 and count_empty_cells == int(puzzle[wall[0]][wall[1]]) - count_bulbs:
                 for var in sure_variable:
                     if puzzle[var[0]][var[1]] == '_':
@@ -416,6 +436,8 @@ def place_must_have_bulbs(puzzle: List[List[str]], empty_cells: List[List[int]])
     return empty_cells
 
 
+# remove all cells surrounding a wall 0 from the list of places for bulbs, as there can't be any bulbs surrouding
+# a wall 0
 def remove_zero_wall_neighbours(puzzle: List[List[str]], empty_cells: List[List[int]]):
     invalid_neighbours = []
     # remove all neighbours of a zero wall
@@ -427,7 +449,7 @@ def remove_zero_wall_neighbours(puzzle: List[List[str]], empty_cells: List[List[
             empty_cells.remove(invalid_neighbours[x])
 
 
-# place bulbs in places that must be bulbs
+# do some preprocessing to decrease the number of variables to be considered
 def pre_process(puzzle: List[List[str]], empty_cells: List[List[int]]):
     empty_cells = place_must_have_bulbs(puzzle, empty_cells)
     remove_zero_wall_neighbours(puzzle, empty_cells)
@@ -436,14 +458,16 @@ def pre_process(puzzle: List[List[str]], empty_cells: List[List[int]]):
     is_map_lit_up_and_clean_map(puzzle)
 
 
+# call necessary methods/algorithms to solve the puzzle as required.
 def solve(puzzle: List[List[str]], heuristic: str):
     domain = ('b', '_')
     non_assigned = get_empty_cells(puzzle)
     pre_process(puzzle, non_assigned)
-    print("Chosen heuristic to solve the puzzle: {}.".format(heuristic))
+    print("Chosen heuristic: {}.".format(heuristic))
     return forward_checking(puzzle, domain, non_assigned, heuristic)
 
 
+# receive input, process input and call necessary methods to solve the puzzle.
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]

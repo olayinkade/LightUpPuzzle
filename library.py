@@ -54,6 +54,7 @@ def generate_valid_neighbours(row, col, length, puzzle, bulb_inclusive=False):
 
 
 def print_puzzle(puzzle: List[List[str]]):
+    print()
     for r in range(len(puzzle)):
         for c in range(len(puzzle[0])):
             print(puzzle[r][c], end=' ')
