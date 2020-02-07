@@ -6,8 +6,9 @@ invalid_wall = []
 valid_wall = []
 
 
+# This function reads in the puzzle from the text file and returns it as a list of lists, where the lists are the rows
 def read_puzzle():
-    txt_file = open('Puzzles.txt')
+    txt_file = open('puzzle.txt')
     txt_file.readline()
     dimension = txt_file.readline().split()
     row = int(dimension[0])

@@ -350,7 +350,7 @@ def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic: st
     if num_nodes % 10000 == 0:
         print('\rAlready processed {} nodes.'.format(num_nodes), end='')
     if num_nodes == 5000000:
-        return 'Too many nodes. Timeout'
+        return 'Too many nodes. Timeout!'
     if validate_wall_condition(puzzle):
         return puzzle
     # backtrack if this cannot be part of a valid solution
@@ -482,7 +482,7 @@ def main(argv=None):
     starting_time = time.time()
     solution = solve(puzzle, arguments.heuristic)
     ending_time = time.time()
-    if solution == 'Too many nodes. Timeout':
+    if solution == 'Too many nodes. Timeout!':
         print('Too many nodes. Timeout.\nIt took {} seconds.'.format(ending_time - starting_time))
     elif solution == 'stop':
         print('Please retry!')
