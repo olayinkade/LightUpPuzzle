@@ -10,30 +10,32 @@ valid_wall = []
 already_placed = []
 
 
+# Prioritize empty position where walls are valid neighbours
 def prioritize_by_wall_neighbours(puzzle):
-    # Prioritize empty position where walls are valid neighbours
     for x in variables:
         x[0] = 0
 
     for x in range(len(valid_wall)):
         valid_neighbours = generate_valid_neighbours(valid_wall[x][0], valid_wall[x][1], len(puzzle), puzzle)
+        # if the wall is not completed all the neighbour around it would be prioritized
         if int(puzzle[valid_wall[x][0]][valid_wall[x][1]]) != count_bulbs(puzzle, valid_wall[x]):
             for z in range(len(valid_neighbours)):
                 for a in range(len(variables)):
                     if variables[a][1] == valid_neighbours[z]:
                         variables[a][0] += 1
                         break
+        # if the wall has already been completed neidgbour
         else:
-            for z in range(len(valid_neighbours)):
-                for a in range(len(variables)):
-                    if variables[a][1] == valid_neighbours[z]:
-                        variables[a][0] -= 2
-                        break
+            if heuristic == 'most_constraining':
+                for z in range(len(valid_neighbours)):
+                    for a in range(len(variables)):
+                        if variables[a][1] == valid_neighbours[z]:
+                            variables[a][0] -= 2
+                            break
 
 
 def remove_zero_wall_neighbours(puzzle):
     invalid_neighbours = []
-    # remove all neighbours of a zero wall
     for x in range(len(invalid_wall)):
         invalid_neighbours.extend(generate_valid_neighbours(invalid_wall[x][0],
                                                             invalid_wall[x][1], len(puzzle), puzzle))
@@ -83,6 +85,7 @@ def place_sure_bulbs(puzzle):
         if not removed:
             not_changed = True
         place_bulbs(already_placed, [], "b", "_", "*")
+    count = count
 
 
 def remove_variables_that_is_lit(puzzle):
@@ -133,14 +136,14 @@ def is_lit_up(puzzle):
     return lit_up
 
 
-def backtrack(heuristic: str):
+def backtrack():
     stack.append(([-1, -1], variables, 0, already_placed))
     global num_nodes
     num_nodes = 1
     while len(stack) != 0:
         curr = stack.pop()
         num_nodes += 1
-        if curr[0][0] != -1:
+        if curr[0] != [-1, -1]:
             puzzle = place_bulbs(curr[3], curr[0][1], "b", "_", "*")
             is_valid_row_col = valid_rows_and_cols(curr[0][1][0], curr[0][1][1], puzzle)
 
@@ -168,6 +171,8 @@ def backtrack(heuristic: str):
             hybrid(main_puzzle, curr[1])
         else:
             print('Heuristic must be either "most_constrained", "most_constraining" or "hybrid"')
+        if curr[0] != [-1, -1]:
+            place_bulbs(curr[3], curr[0][1], "_", "*", "_")
 
         for x in range(len(curr[1])):
             child_position = curr[1][x]
@@ -361,7 +366,7 @@ def count_adjacent_lit_cells(puzzle, r, c) -> int:
     count = 0
     if r > 0 and (puzzle[r-1][c] == '*' or puzzle[r-1][c] == 'b'):
         count += 1
-    if r < len(puzzle)-1 and (puzzle[r+1][c] == '*' or puzzle[r+1][c] == 'b') :
+    if r < len(puzzle)-1 and (puzzle[r+1][c] == '*' or puzzle[r+1][c] == 'b'):
         count += 1
     if c > 0 and (puzzle[r][c-1] == '*' or puzzle[r][c-1] == 'b'):
         count += 1
@@ -484,12 +489,13 @@ def main(argv=None):
     arg_parser.add_argument('--heuristic', action='store', dest='heuristic', type=str, default='most_constrained')
 
     arguments = arg_parser.parse_args(argv)
-
+    global heuristic
+    heuristic= arguments.heuristic
     main_puzzle = read_puzzle()
 
     if not prioritize_variables(main_puzzle):
         starting_time = time.time()
-        print_puzzle(backtrack(arguments.heuristic))
+        print_puzzle(backtrack())
         ending_time = time.time()
         print("The program was run for {} seconds.".format(ending_time - starting_time))
         print(num_nodes)
