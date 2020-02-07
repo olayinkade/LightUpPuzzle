@@ -1,4 +1,4 @@
-1. Results of running backtracking and forward checking algorithms with three different heuristics on 6x6, 8x8 and 10x10 are as below. Note that the amount of nodes visited is limited to 3,000,000. Results include average runtime and average number of nodes visited.
+1. Results of running backtracking and forward checking algorithms with three different heuristics on 6x6, 8x8 and 10x10 are as below. Note that the amount of nodes visited is limited to 5,000,000. Results include average runtime and average number of nodes visited.
 
 For 6x6 map:
 -----------
@@ -6,9 +6,9 @@ For 6x6 map:
 * Backtracking with most constraining heuristic:
 * Backtracking with hybrid heuristic:
 
-* Forward checking with most constrained heuristic:
-* Forward checking with most constraining heuristic:
-* Forward checking with hybrid heuristic:
+* Forward checking with most constrained heuristic: 0.0007758935293 secs; 1 node
+* Forward checking with most constraining heuristic:0.0007629394531 secs; 1 node
+* Forward checking with hybrid heuristic: 0.0008021990458 secs; 1 node
 
 For 8x8 map:
 -----------
@@ -16,9 +16,9 @@ For 8x8 map:
 * Backtracking with most constraining heuristic:
 * Backtracking with hybrid heuristic:
 
-* Forward checking with most constrained heuristic:
-* Forward checking with most constraining heuristic:
-* Forward checking with hybrid heuristic:
+* Forward checking with most constrained heuristic: 0.001575311025 secs; 1 node
+* Forward checking with most constraining heuristic: 0.001499414444 secs; 1 node
+* Forward checking with hybrid heuristic: 0.001645008723 secs; 1 node
 
 For 10x10 map:
 -------------
@@ -26,12 +26,42 @@ For 10x10 map:
 * Backtracking with most constraining heuristic:
 * Backtracking with hybrid heuristic:
 
-* Forward checking with most constrained heuristic:
+* Forward checking with most constrained heuristic: 0.00257563591 secs; 1 node
+* Forward checking with most constraining heuristic: 0.002607901891 secs; 1 node
+* Forward checking with hybrid heuristic: 0.002583821615 secs; 1 node
+
+For 12x12 map:
+-------------
+* Backtracking with most constrained heuristic:
+* Backtracking with most constraining heuristic:
+* Backtracking with hybrid heuristic:
+
+* Forward checking with most constrained heuristic: 0.006344954173 secs; 9 nodes
+* Forward checking with most constraining heuristic: 0.01059150696 secs; 21 nodes
+* Forward checking with hybrid heuristic: 0.007397731145 secs; 9 nodes
+
+For 14x14 map:
+-------------
+* Backtracking with most constrained heuristic:
+* Backtracking with most constraining heuristic:
+* Backtracking with hybrid heuristic:
+
+* Forward checking with most constrained heuristic: 0.00843667984 secs; 8 nodes
+* Forward checking with most constraining heuristic: 0.01758567492 secs; 30 nodes
+* Forward checking with hybrid heuristic: 0.009161472321 secs; 8 nodes
+
+For 16x16 map:
+-------------
+* Backtracking with most constrained heuristic:
+* Backtracking with most constraining heuristic:
+* Backtracking with hybrid heuristic:
+
+* Forward checking with most constrained heuristic: 155.656998897 secs; 13398+12626+880384 = 38020 nodes
 * Forward checking with most constraining heuristic:
-* Forward checking with hybrid heuristic:
+* Forward checking with hybrid heuristic: 288.457603931427+158.34367203712463+145.95407605171204 = 197.5851173401 secs ; 456686+284916+260738 = 334113 nodes
 
 
-2. Results of running backtracking and forward checking algorithms with three different heuristics on 12x12 board with different number of walls are as below. Note that the amount of nodes visited is limited to 3,000,000. Results include average runtime and average number of nodes visited.
+2. Results of running backtracking and forward checking algorithms with three different heuristics on 12x12 board with different number of walls are as below. Note that the amount of nodes visited is limited to 5,000,000. Results include average runtime and average number of nodes visited.
 
 For 12 walls:
 ------------
@@ -39,9 +69,9 @@ For 12 walls:
 * Backtracking with most constraining heuristic:
 * Backtracking with hybrid heuristic:
 
-* Forward checking with most constrained heuristic:
-* Forward checking with most constraining heuristic:
-* Forward checking with hybrid heuristic:
+* Forward checking with most constrained heuristic: Timeout after visiting 5,000,000 nodes in 1133 seconds
+* Forward checking with most constraining heuristic: Timeout after visiting 5,000,000 nodes in 2100 seconds
+* Forward checking with hybrid heuristic: 0.5972946485 secs; 1674 nodes
 
 For 24 walls:
 ------------
@@ -49,9 +79,9 @@ For 24 walls:
 * Backtracking with most constraining heuristic:
 * Backtracking with hybrid heuristic:
 
-* Forward checking with most constrained heuristic:
-* Forward checking with most constraining heuristic:
-* Forward checking with hybrid heuristic:
+* Forward checking with most constrained heuristic: Timeout after visiting 5,000,000 nodes in 1296 seconds
+* Forward checking with most constraining heuristic: Timeout after visiting 5,000,000 nodes in 1683 seconds
+* Forward checking with hybrid heuristic: Timeout after visiting 5,000,000 nodes in 1538 seconds
 
 For 48 walls:
 ------------
@@ -59,7 +89,7 @@ For 48 walls:
 * Backtracking with most constraining heuristic:
 * Backtracking with hybrid heuristic:
 
-* Forward checking with most constrained heuristic:
-* Forward checking with most constraining heuristic:
-* Forward checking with hybrid heuristic:
+* Forward checking with most constrained heuristic: 0.004359404246 secs; 1 node
+* Forward checking with most constraining heuristic: 0.004519621531 secs; 1 node
+* Forward checking with hybrid heuristic: 0.004532019297 secs; 1 node
 
