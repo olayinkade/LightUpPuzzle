@@ -11,6 +11,7 @@ valid_wall = library.valid_wall
 already_placed = []
 main_puzzle = []
 num_nodes = 0
+heuristic = ''
 
 
 # Prioritize empty position where walls are valid neighbours
@@ -443,18 +444,18 @@ def main(argv=None):
     heuristic = arguments.heuristic
     main_puzzle = library.read_puzzle()
 
+    starting_time = time.time()
     if not prioritize_variables(main_puzzle):
-        starting_time = time.time()
         result = backtrack()
         library.print_puzzle(result)
-        ending_time = time.time()
         if result == 'Too many nodes. Timeout!':
-            print('Too many nodes. Timeout!\nIt took {} seconds.'.format(ending_time - starting_time))
-        else:
-            print("The program was run for {} seconds.".format(ending_time - starting_time))
+            print(result)
+
         print("Processed {} nodes".format(num_nodes))
     else:
         library.print_puzzle(main_puzzle)
+    ending_time = time.time()
+    print("The program was run for {} seconds.".format(ending_time - starting_time))
 
 
 if __name__ == '__main__':
