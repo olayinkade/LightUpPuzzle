@@ -1,0 +1,1 @@
+1. Results of running backtracking and forward checking algorithms with three different heuristics on 6x6, 8x8 and 10x10 are as follow:
