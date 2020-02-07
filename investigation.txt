@@ -1,1 +1,65 @@
-1. Results of running backtracking and forward checking algorithms with three different heuristics on 6x6, 8x8 and 10x10 are as follow:
+1. Results of running backtracking and forward checking algorithms with three different heuristics on 6x6, 8x8 and 10x10 are as below. Note that the amount of nodes visited is limited to 3,000,000. Results include average runtime and average number of nodes visited.
+
+For 6x6 map:
+-----------
+* Backtracking with most constrained heuristic:
+* Backtracking with most constraining heuristic:
+* Backtracking with hybrid heuristic:
+
+* Forward checking with most constrained heuristic:
+* Forward checking with most constraining heuristic:
+* Forward checking with hybrid heuristic:
+
+For 8x8 map:
+-----------
+* Backtracking with most constrained heuristic:
+* Backtracking with most constraining heuristic:
+* Backtracking with hybrid heuristic:
+
+* Forward checking with most constrained heuristic:
+* Forward checking with most constraining heuristic:
+* Forward checking with hybrid heuristic:
+
+For 10x10 map:
+-------------
+* Backtracking with most constrained heuristic:
+* Backtracking with most constraining heuristic:
+* Backtracking with hybrid heuristic:
+
+* Forward checking with most constrained heuristic:
+* Forward checking with most constraining heuristic:
+* Forward checking with hybrid heuristic:
+
+
+2. Results of running backtracking and forward checking algorithms with three different heuristics on 12x12 board with different number of walls are as below. Note that the amount of nodes visited is limited to 3,000,000. Results include average runtime and average number of nodes visited.
+
+For 12 walls:
+------------
+* Backtracking with most constrained heuristic:
+* Backtracking with most constraining heuristic:
+* Backtracking with hybrid heuristic:
+
+* Forward checking with most constrained heuristic:
+* Forward checking with most constraining heuristic:
+* Forward checking with hybrid heuristic:
+
+For 24 walls:
+------------
+* Backtracking with most constrained heuristic:
+* Backtracking with most constraining heuristic:
+* Backtracking with hybrid heuristic:
+
+* Forward checking with most constrained heuristic:
+* Forward checking with most constraining heuristic:
+* Forward checking with hybrid heuristic:
+
+For 48 walls:
+------------
+* Backtracking with most constrained heuristic:
+* Backtracking with most constraining heuristic:
+* Backtracking with hybrid heuristic:
+
+* Forward checking with most constrained heuristic:
+* Forward checking with most constraining heuristic:
+* Forward checking with hybrid heuristic:
+

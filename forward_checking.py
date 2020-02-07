@@ -349,7 +349,7 @@ def forward_checking(puzzle: List[List[str]], domain, empty_cells, heuristic: st
             print('\rProcessing...', end='')
     if num_nodes % 10000 == 0:
         print('\rAlready processed {} nodes.'.format(num_nodes), end='')
-    if num_nodes == 5000000:
+    if num_nodes == 3000000:
         return 'Too many nodes. Timeout'
     if validate_wall_condition(puzzle):
         return puzzle
