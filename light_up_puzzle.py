@@ -1,4 +1,8 @@
+import argparse
 import random
+import sys
+import time
+
 stack = []
 variables = []
 invalid_wall = []
@@ -129,7 +133,7 @@ def is_lit_up(puzzle):
     return lit_up
 
 
-def backtrack():
+def backtrack(heuristic: str):
     stack.append(([-1, -1], variables, 0, already_placed))
     global num_nodes
     num_nodes = 1
@@ -156,7 +160,14 @@ def backtrack():
             puzzle = place_bulbs(curr[3], curr[0][1], "b", "_", "*")
             curr[1].remove(curr[0])
 
-        find_most_constraining(main_puzzle, curr[1])
+        if heuristic == 'most_constrained':
+            find_most_constrained(main_puzzle, curr[1])
+        elif heuristic == 'most_constraining':
+            find_most_constraining(main_puzzle, curr[1])
+        elif heuristic == 'hybrid':
+            hybrid(main_puzzle, curr[1])
+        else:
+            print('Heuristic must be either "most_constrained", "most_constraining" or "hybrid"')
 
         for x in range(len(curr[1])):
             child_position = curr[1][x]
@@ -462,11 +473,30 @@ def hybrid(puzzle, child_possible_variables):
     child_possible_variables[-1 + chosen] = item_1
 
 
-main_puzzle = read_puzzle()
-if not prioritize_variables(main_puzzle):
-    print_puzzle(backtrack())
-    print(num_nodes)
-else:
-    print_puzzle(main_puzzle)
+main_puzzle = []
 
-print("Done")
+
+def main(argv=None):
+    global main_puzzle
+    if argv is None:
+        argv = sys.argv[1:]
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('--heuristic', action='store', dest='heuristic', type=str, default='most_constrained')
+
+    arguments = arg_parser.parse_args(argv)
+
+    main_puzzle = read_puzzle()
+
+    if not prioritize_variables(main_puzzle):
+        starting_time = time.time()
+        print_puzzle(backtrack(arguments.heuristic))
+        ending_time = time.time()
+        print("The program was run for {} seconds.".format(ending_time - starting_time))
+        print(num_nodes)
+    else:
+        print_puzzle(main_puzzle)
+
+
+if __name__ == '__main__':
+    main()
+
