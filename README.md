@@ -25,6 +25,8 @@ where 'heuristic_name' could be either 'most_constrained', 'most_constraining' o
   
 ## PREPROCESSING AND HEURISTICS:
 **Preprocessing**: in order to limit the number of potential variables, we do a quick check through all walls, to see if any neighbouring cells of a wall must be bulbs. For example, 4 cells surrounding a wall 4 must be bulbs, or 3 neighbouring cells surrounding a wall 3 on the edge, or 2 cells surrounding a wall 2 in the edge. More generally, if the number of empty neighbours of a wall is the same as the number of required bulbs surrounding that wall, we will place bulbs there and light up all corresponding cells, through that we can eliminate a significant amount of potential variables in a typical puzzle.
+<br><br>We remove all the empty cell surrounding a zero wall
+<br><br>All walls that has a valid number of bulbs If there are other empty cells surrounding i remove those empty cells from the list of possible places I can put a bulb
 
 **Heuristics**:
 - *Most constrained*: the constraint of each variable (i.e. cell) is the sum of all three types of constraints listed above.
@@ -34,4 +36,4 @@ where 'heuristic_name' could be either 'most_constrained', 'most_constraining' o
 ## ALGORITHMS:
 **Forward checking**: The algorithm checks the variables and sees if a cell cannot be either empty ('_') or ('b'), then it backtracks. This basically follows the standard algorithm shown in class.
 
-**Backtracking**: briefly explain your algorithm here.
+**Backtracking**: This algorithm uses DFS to search for the optimal position to bulbs to fulfill all constrains

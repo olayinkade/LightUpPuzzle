@@ -30,7 +30,7 @@ def prioritize_by_wall_neighbours(puzzle):
                         break
         # if the wall has already been completed neidgbour
         else:
-            if heuristic == 'most_constraining':
+            if heuristic == 'most_constraining' or heuristic == 'hybrid':
                 for z in range(len(valid_neighbours)):
                     for a in range(len(variables)):
                         if variables[a][1] == valid_neighbours[z]:
@@ -145,6 +145,7 @@ def backtrack():
     stack.append(([-1, -1], variables, 0, already_placed))
     global num_nodes
     num_nodes = 1
+    puzzle = []
     while len(stack) != 0:
         curr = stack.pop()
         num_nodes += 1
@@ -166,7 +167,6 @@ def backtrack():
             if is_lit_up(puzzle):
                 if valid_bulbs_next_to_wall(puzzle):
                     break
-
             bulb_placed = list(curr[3])
             bulb_placed.append(curr[0][1])
             puzzle = place_bulbs(curr[3], curr[0][1], "b", "_", "*")
